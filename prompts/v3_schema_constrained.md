@@ -16,8 +16,8 @@ Rules:
    optionality that isn't stated.
 2. For every parameter, separately record (outside the YAML, as a second
    JSON object) the exact verbatim quote from the excerpt that justifies
-   it, keyed by parameter name: `{{"PARAM_NAME": {{"quote": "...",
-   "source_file": "snippets/<file>"}}}}`. If you cannot point to an exact
+   it, keyed by parameter name: `{"PARAM_NAME": {"quote": "...",
+   "source_file": "snippets/<file>"}}`. If you cannot point to an exact
    quote, do not emit the parameter.
 3. Returning zero parameters is a fully valid, expected answer for
    excerpts that describe fixed/mandatory behavior rather than
