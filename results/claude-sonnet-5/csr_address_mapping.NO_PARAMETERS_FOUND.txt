@@ -1,0 +1,19 @@
+Snippet: snippets/csr_address_mapping.txt
+Model: claude-sonnet-5 (v3 schema-constrained prompt)
+Result: zero parameters extracted.
+
+Reasoning: the excerpt contains no optionality language ("may", "might",
+"should", "optional"/"optionally", "implementation-defined"/
+"implementation-specific"). Every sentence describes a fixed encoding
+convention that all conformant implementations must follow identically:
+
+  - "the upper 4 bits ... are used to encode the read and write
+    accessibility" -- a fixed convention, not a choice.
+  - "The top two bits ... indicate whether the register is read/write
+    ... or read-only" -- a fixed encoding, not implementation-specific
+    behavior.
+  - "The next two bits ... encode the lowest privilege level" -- same.
+
+Per prompt rule 3 (v3_schema_constrained.md), returning zero parameters
+is the correct, expected answer here rather than forcing a match on
+text that merely sounds technical.

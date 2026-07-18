@@ -1,0 +1,23 @@
+$schema: param_schema.json#
+kind: parameter
+name: CACHE_ORGANIZATION
+long_name: Organization of a cache (e.g. associativity, structure)
+description: |
+  The organization of a cache (e.g. associativity, number of sets) is
+  implementation-specific. The standard does not define an enumerable
+  set of legal organizations -- only that the execution environment
+  must provide software a means to discover it.
+
+  NOTE: unlike CACHE_BLOCK_SIZE and CACHE_CAPACITY, the manual gives no
+  structure for what "organization" actually consists of, so the schema
+  below is a conservative placeholder (an opaque string) rather than a
+  confident modeling of the real value space. This would need further
+  scoping (e.g. by the Parameter SIG) before being schema-complete.
+schema:
+  type: string
+definedBy:
+  extension:
+    anyOf:
+      - name: Zicbom
+      - name: Zicbop
+      - name: Zicboz

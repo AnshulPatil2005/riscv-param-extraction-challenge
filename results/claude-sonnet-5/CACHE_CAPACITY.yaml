@@ -1,0 +1,18 @@
+$schema: param_schema.json#
+kind: parameter
+name: CACHE_CAPACITY
+long_name: Total capacity of a cache, in bytes
+description: |
+  The total capacity of a cache, in bytes. The standard does not mandate
+  any particular cache hierarchy or capacity; this is left entirely to
+  the implementation, which provides a means for software to discover
+  it.
+schema:
+  type: integer
+  minimum: 1
+definedBy:
+  extension:
+    anyOf:
+      - name: Zicbom
+      - name: Zicbop
+      - name: Zicboz

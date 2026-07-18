@@ -1,0 +1,14 @@
+$schema: param_schema.json#
+kind: parameter
+name: HALLUCINATED_QUOTE
+long_name: A parameter whose evidence quote does not actually appear in the source
+description: |
+  Deliberately broken fixture: the .evidence.json quote for this
+  parameter does not appear in the cited source file. This exists to
+  prove scripts/validate.py's grounding check actually fails closed
+  instead of always passing.
+schema:
+  type: boolean
+definedBy:
+  extension:
+    name: Zicbom

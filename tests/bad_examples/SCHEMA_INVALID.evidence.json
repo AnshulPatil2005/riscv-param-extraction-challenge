@@ -1,0 +1,6 @@
+{
+  "schema_invalid_lowercase_name": {
+    "quote": "irrelevant -- this fixture is meant to fail structural validation, not grounding",
+    "source_file": "snippets/cmo_cache_block.txt"
+  }
+}

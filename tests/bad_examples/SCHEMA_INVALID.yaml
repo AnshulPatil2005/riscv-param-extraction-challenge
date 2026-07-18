@@ -1,0 +1,9 @@
+$schema: param_schema.json#
+kind: parameter
+name: schema_invalid_lowercase_name
+long_name: A parameter that violates the param_name pattern and is missing a required field
+schema:
+  type: boolean
+definedBy:
+  extension:
+    name: Zicbom
