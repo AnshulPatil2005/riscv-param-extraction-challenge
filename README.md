@@ -16,7 +16,7 @@ model hallucination, and produce results as schema-shaped YAML.
 |---|---|---|---|
 | Claude Sonnet 5 (`claude-sonnet-5`) | Anthropic | 200K tokens | Run -- results in `results/claude-sonnet-5/` |
 | Claude Opus 4.8 (`claude-opus-4-8`) | Anthropic | 200K tokens | Run -- results in `results/claude-opus-4-8/`; frontier proprietary comparison leg |
-| GLM-4.6 | Z.ai (Zhipu) | 128K tokens | Planned open-weight comparison leg -- see [Status](#5-status--whats-not-run-yet) |
+| GLM-4.6 | Z.ai (Zhipu) | ~128K tokens | Run -- results in `results/glm-4.6/`; open-weight comparison leg (exact UI version string to be confirmed) |
 
 Long context matters more than it looks for this task: real ISA Manual
 excerpts often split a parameter's trigger phrase ("implementation-specific")
@@ -130,66 +130,77 @@ fixed encoding convention every conformant implementation follows
 identically. This is the negative control: a prompt that over-triggers on
 "sounds technical" text would incorrectly extract 2-3 parameters here.
 
-## 4. Model comparison: Sonnet 5 vs Opus 4.8
+## 4. Model comparison: Sonnet 5 vs Opus 4.8 vs GLM-4.6
 
-Both models were run on the identical v3 prompt. Scored on the four
-dimensions below (results in `results/claude-sonnet-5/` and
-`results/claude-opus-4-8/`):
+All three models were run on the identical v3 prompt (Claude models via
+this environment; GLM-4.6 via a hosted playground at default settings).
+Results in `results/claude-sonnet-5/`, `results/claude-opus-4-8/`, and
+`results/glm-4.6/`.
 
-| Dimension | Sonnet 5 | Opus 4.8 |
-|---|---|---|
-| Groundedness (every param has a verbatim source quote) | pass | pass |
-| Recall on cache-block sentence | 3 candidates | 2 emitted + 1 explicitly declined |
-| Precision on CSR negative control | 0 (correct) | 0 (correct) |
-| Schema conformity (passes `validate.py` first try) | pass | pass |
+| Dimension | Sonnet 5 | Opus 4.8 | GLM-4.6 |
+|---|---|---|---|
+| Groundedness (every param has a verbatim source quote) | pass | pass | pass |
+| Recall on cache-block sentence | 3 candidates | 2 emitted + 1 explicitly declined | **1 only** (missed `CACHE_CAPACITY`) |
+| Precision on CSR negative control | 0 (correct) | 0 (correct) | 0 (correct) |
+| Schema conformity (passes `validate.py` first try) | pass | pass | pass |
 
-Neither model hallucinated, both correctly abstained on the negative
-control, and every emitted parameter passed schema + grounding validation.
-The interesting divergence is on a **single judgment call**:
+No model hallucinated, all three correctly returned **zero** parameters on
+the CSR negative control, and every emitted parameter passed schema +
+grounding validation. The models split cleanly into two behaviors:
 
-- **`CACHE_ORGANIZATION`.** The source clause makes cache "organization"
-  implementation-specific, so the trigger is present. **Sonnet 5 emitted
-  it** as a parameter with an opaque `type: string` schema, flagged in its
-  description as needing SIG scoping. **Opus 4.8 declined to emit it**
-  (see [`CACHE_ORGANIZATION.DECLINED.txt`](results/claude-opus-4-8/CACHE_ORGANIZATION.DECLINED.txt)),
-  on the grounds that "organization" has no definable value space and an
-  opaque-string parameter validates nothing -- making it a schema-shaped
-  false positive rather than a real architectural constraint.
+**The two frontier models (Sonnet, Opus) differ only on a judgment call.**
+The source clause makes cache "organization" implementation-specific, so
+the trigger is present. **Sonnet 5 emitted `CACHE_ORGANIZATION`** as a
+parameter with an opaque `type: string` schema, flagged as needing SIG
+scoping. **Opus 4.8 declined to emit it**
+(see [`CACHE_ORGANIZATION.DECLINED.txt`](results/claude-opus-4-8/CACHE_ORGANIZATION.DECLINED.txt)),
+arguing "organization" has no definable value space and an opaque-string
+parameter validates nothing -- a schema-shaped false positive. Opus also
+flagged that gating `CACHE_CAPACITY` on the CMO extensions is itself a
+modeling question (any cache has a capacity regardless of CMO), which
+Sonnet did not raise. Both extracted the two clean numeric parameters.
 
-- **`CACHE_CAPACITY` gating.** Opus additionally flagged that cache
-  capacity isn't conceptually a CMO-extension concept (any cache has a
-  capacity regardless of CMO), so the `definedBy: anyOf: [Zicbom, Zicbop,
-  Zicboz]` gating -- which it copied from the source section for
-  consistency -- is itself a modeling question, not something the excerpt
-  settles. Sonnet used the same gating without raising the question.
+**The open-weight model (GLM-4.6) under-extracts.** GLM returned only
+`CACHE_BLOCK_SIZE` -- and its output is near-identical to the few-shot
+example it was shown (same `description` string, same `long_name: TODO`).
+It **missed `CACHE_CAPACITY` entirely**, even though the evidence quote it
+produced itself contains "The capacity ... of a cache ... implementation-
+specific." This is textbook few-shot anchoring: the model reliably
+reproduces the parameter it was shown as an example but fails to
+generalize the extraction rule to the *novel* parameter sitting in the
+same sentence. Crucially, everything GLM *did* emit was correct --
+grounded, schema-valid, and it aced the negative control. Its failure mode
+is not hallucination (low precision) but **omission (low recall)**.
 
-**Read on the divergence:** Opus's more conservative call is the better one
-for this project. `riscv-unified-db` parameters exist to be validated
-against real configs; a parameter whose schema accepts any string can't
-do that, and the repo's own review culture pushes back on exactly this
-kind of under-constrained addition (e.g. PR #2009 required splitting an
-over-broad parameter; issue #69 / PR #1968 show disputed modeling deferred
-to the Parameter SIG rather than merged speculatively). The recommended
-pipeline behavior is therefore: extract the two clean numeric parameters,
-and surface "organization" as a flagged observation for human/SIG review
-rather than auto-minting an unconstrained parameter. This is a concrete
-argument for a model-ensemble design where a disagreement between models
-becomes a routing signal -- "send to human" -- rather than something to
-average away.
+**Why this matters for the project.** The Spring 2026 pipeline's documented
+weakness was recall (36.8%), not precision -- and this n=2 probe reproduces
+exactly that shape on the open-weight model: safe but incomplete. Two
+concrete design implications follow:
 
-## 5. Status -- what's not run yet
+1. **Model choice is a recall decision here, not a precision one.** All
+   three models are trustworthy when they *do* extract; they differ in how
+   much they *miss*. For a pipeline whose stated goal is quality/robustness,
+   that argues for a frontier model on the extraction pass rather than
+   trading recall for the open model's lower cost.
+2. **Disagreement is a routing signal.** Where Sonnet and Opus split
+   (`CACHE_ORGANIZATION`), the right pipeline behavior is to surface it for
+   human/SIG review, not to auto-merge or average. The repo's own review
+   culture backs the conservative call -- PR #2009 required splitting an
+   over-broad parameter; issue #69 / PR #1968 show disputed modeling
+   deferred to the Parameter SIG rather than merged speculatively.
 
-The open-weight leg (GLM-4.6) is not yet run in this repo -- no API
-credentials are configured in this environment. `scripts/extract.py` is
-written and ready (`ANTHROPIC_API_KEY` / `ZHIPU_API_KEY`), and
-`prompts/rendered/` contains the fully-filled prompts for pasting straight
-into a hosted playground without a key. Once GLM output is in, it will be
-scored on the same four dimensions:
+## 5. Status -- open items
 
-- **Groundedness** -- real quote vs. fabricated
-- **Recall** -- both parameters in the cache-block sentence caught, not just one
-- **Precision on the negative case** -- correctly returns zero on the CSR snippet
-- **Schema conformity** -- passes `scripts/validate.py` on the first attempt
+- **GLM version string:** the results are filed under `results/glm-4.6/`,
+  but the exact version reported by the playground UI should be confirmed
+  and the directory renamed if it differs (see
+  [`results/glm-4.6/_raw_responses.txt`](results/glm-4.6/_raw_responses.txt)).
+- **Sample size:** this is an n=2-snippet probe. The numbers here
+  illustrate model *behavior differences*, not a benchmark score -- see §6.
+- **API automation:** `scripts/extract.py` is written and ready
+  (`ANTHROPIC_API_KEY` / `ZHIPU_API_KEY`) to reproduce all three legs
+  automatically once keys are configured; the current results were produced
+  by running the same prompt through each model directly.
 
 ## 6. Benchmark context
 
@@ -209,6 +220,7 @@ python -m venv .venv
 .venv/bin/pip install pyyaml jsonschema      # + anthropic / openai if calling APIs
 python scripts/validate.py --results results/claude-sonnet-5   # should report 0 errors
 python scripts/validate.py --results results/claude-opus-4-8   # should report 0 errors
+python scripts/validate.py --results results/glm-4.6           # should report 0 errors
 python scripts/validate.py --results tests/bad_examples        # should report 4 errors (proves the check has teeth)
 
 # once ANTHROPIC_API_KEY / ZHIPU_API_KEY are set:

@@ -1,0 +1,36 @@
+Raw GLM-4.6 responses, recorded verbatim (default settings, hosted playground).
+
+NOTE: exact model version string as reported by the playform UI to be
+confirmed by the operator; directory named glm-4.6 per the planned target.
+
+=== Response 1 -- snippets/cmo_cache_block.txt ===
+
+```yaml
+$schema: param_schema.json#
+kind: parameter
+name: CACHE_BLOCK_SIZE
+description: "The observable size of a cache block, in bytes"
+long_name: TODO
+schema:
+  type: integer
+  minimum: 1
+definedBy:
+  extension:
+    anyOf:
+      - name: Zicbom
+      - name: Zicbop
+      - name: Zicboz
+```
+
+```json
+{
+  "CACHE_BLOCK_SIZE": {
+    "quote": "The capacity and organization of a cache and the size of a cache block are both implementation-specific, and the execution environment provides software a means to discover information about the caches and cache blocks in a system.",
+    "source_file": "snippets/cmo_cache_block.txt"
+  }
+}
+```
+
+=== Response 2 -- snippets/csr_address_mapping.txt ===
+
+{}

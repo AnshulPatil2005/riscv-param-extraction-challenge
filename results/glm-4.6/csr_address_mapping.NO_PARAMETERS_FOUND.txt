@@ -1,0 +1,10 @@
+Snippet: snippets/csr_address_mapping.txt
+Model: GLM-4.6 (v3 schema-constrained prompt)
+Raw response: {}
+Result: zero parameters extracted.
+
+GLM returned an empty JSON object, correctly identifying that the CSR
+address-mapping snippet contains no optionality language and describes
+only fixed encoding conventions. This matches both Claude models --
+all three return zero on the negative control, so no model over-triggers
+on technical-but-fixed text.

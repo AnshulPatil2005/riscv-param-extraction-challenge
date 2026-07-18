@@ -1,0 +1,14 @@
+$schema: param_schema.json#
+kind: parameter
+name: CACHE_BLOCK_SIZE
+description: "The observable size of a cache block, in bytes"
+long_name: TODO
+schema:
+  type: integer
+  minimum: 1
+definedBy:
+  extension:
+    anyOf:
+      - name: Zicbom
+      - name: Zicbop
+      - name: Zicboz
