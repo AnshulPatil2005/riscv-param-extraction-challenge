@@ -106,12 +106,3 @@ In the initial set of CMO extensions, the size of a cache block shall be
 uniform throughout the system.
 
 ---
-
-## Why this version is the one actually run
-
-v1 and v2 are documented as prior iterations to show the failure modes
-they fix. v3 is what `scripts/extract.py` actually sends to the model(s),
-because its output is directly checkable by `scripts/validate.py` against
-the real schema files vendored in `schema/`, and its evidence-quote
-requirement is what the grounding check enforces mechanically rather than
-by inspection.

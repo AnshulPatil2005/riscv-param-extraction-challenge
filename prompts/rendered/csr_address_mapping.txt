@@ -107,12 +107,3 @@ read-only (11). The next two bits (csr[9:8]) encode the lowest privilege
 level that can access the CSR.
 
 ---
-
-## Why this version is the one actually run
-
-v1 and v2 are documented as prior iterations to show the failure modes
-they fix. v3 is what `scripts/extract.py` actually sends to the model(s),
-because its output is directly checkable by `scripts/validate.py` against
-the real schema files vendored in `schema/`, and its evidence-quote
-requirement is what the grounding check enforces mechanically rather than
-by inspection.
