@@ -14,9 +14,9 @@ model hallucination, and produce results as schema-shaped YAML.
 
 | Model | Provider | Context window | Role |
 |---|---|---|---|
-| Claude Sonnet 5 (`claude-sonnet-5`) | Anthropic | 200K tokens | Primary -- results in `results/claude-sonnet-5/` were produced with this model |
-| Claude Opus 4.8 (`claude-opus-4-8`) | Anthropic | 200K tokens | Planned comparison leg -- see [Status](#status--whats-not-run-yet) |
-| GLM-4.6 | Z.ai (Zhipu) | 128K tokens | Planned open-weight comparison leg -- see [Status](#status--whats-not-run-yet) |
+| Claude Sonnet 5 (`claude-sonnet-5`) | Anthropic | 200K tokens | Run -- results in `results/claude-sonnet-5/` |
+| Claude Opus 4.8 (`claude-opus-4-8`) | Anthropic | 200K tokens | Run -- results in `results/claude-opus-4-8/`; frontier proprietary comparison leg |
+| GLM-4.6 | Z.ai (Zhipu) | 128K tokens | Planned open-weight comparison leg -- see [Status](#5-status--whats-not-run-yet) |
 
 Long context matters more than it looks for this task: real ISA Manual
 excerpts often split a parameter's trigger phrase ("implementation-specific")
@@ -130,21 +130,68 @@ fixed encoding convention every conformant implementation follows
 identically. This is the negative control: a prompt that over-triggers on
 "sounds technical" text would incorrectly extract 2-3 parameters here.
 
-## 4. Status -- what's not run yet
+## 4. Model comparison: Sonnet 5 vs Opus 4.8
 
-No Opus/GLM comparison numbers are in this repo yet -- I don't currently
-have API credentials configured for either provider in this environment.
-`scripts/extract.py` is written and ready to run once keys are available
-(`ANTHROPIC_API_KEY` / `ZHIPU_API_KEY`); the plan is a same-prompt,
-cross-provider comparison (one frontier proprietary model, one frontier
-open-weight model) scored on:
+Both models were run on the identical v3 prompt. Scored on the four
+dimensions below (results in `results/claude-sonnet-5/` and
+`results/claude-opus-4-8/`):
+
+| Dimension | Sonnet 5 | Opus 4.8 |
+|---|---|---|
+| Groundedness (every param has a verbatim source quote) | pass | pass |
+| Recall on cache-block sentence | 3 candidates | 2 emitted + 1 explicitly declined |
+| Precision on CSR negative control | 0 (correct) | 0 (correct) |
+| Schema conformity (passes `validate.py` first try) | pass | pass |
+
+Neither model hallucinated, both correctly abstained on the negative
+control, and every emitted parameter passed schema + grounding validation.
+The interesting divergence is on a **single judgment call**:
+
+- **`CACHE_ORGANIZATION`.** The source clause makes cache "organization"
+  implementation-specific, so the trigger is present. **Sonnet 5 emitted
+  it** as a parameter with an opaque `type: string` schema, flagged in its
+  description as needing SIG scoping. **Opus 4.8 declined to emit it**
+  (see [`CACHE_ORGANIZATION.DECLINED.txt`](results/claude-opus-4-8/CACHE_ORGANIZATION.DECLINED.txt)),
+  on the grounds that "organization" has no definable value space and an
+  opaque-string parameter validates nothing -- making it a schema-shaped
+  false positive rather than a real architectural constraint.
+
+- **`CACHE_CAPACITY` gating.** Opus additionally flagged that cache
+  capacity isn't conceptually a CMO-extension concept (any cache has a
+  capacity regardless of CMO), so the `definedBy: anyOf: [Zicbom, Zicbop,
+  Zicboz]` gating -- which it copied from the source section for
+  consistency -- is itself a modeling question, not something the excerpt
+  settles. Sonnet used the same gating without raising the question.
+
+**Read on the divergence:** Opus's more conservative call is the better one
+for this project. `riscv-unified-db` parameters exist to be validated
+against real configs; a parameter whose schema accepts any string can't
+do that, and the repo's own review culture pushes back on exactly this
+kind of under-constrained addition (e.g. PR #2009 required splitting an
+over-broad parameter; issue #69 / PR #1968 show disputed modeling deferred
+to the Parameter SIG rather than merged speculatively). The recommended
+pipeline behavior is therefore: extract the two clean numeric parameters,
+and surface "organization" as a flagged observation for human/SIG review
+rather than auto-minting an unconstrained parameter. This is a concrete
+argument for a model-ensemble design where a disagreement between models
+becomes a routing signal -- "send to human" -- rather than something to
+average away.
+
+## 5. Status -- what's not run yet
+
+The open-weight leg (GLM-4.6) is not yet run in this repo -- no API
+credentials are configured in this environment. `scripts/extract.py` is
+written and ready (`ANTHROPIC_API_KEY` / `ZHIPU_API_KEY`), and
+`prompts/rendered/` contains the fully-filled prompts for pasting straight
+into a hosted playground without a key. Once GLM output is in, it will be
+scored on the same four dimensions:
 
 - **Groundedness** -- real quote vs. fabricated
 - **Recall** -- both parameters in the cache-block sentence caught, not just one
 - **Precision on the negative case** -- correctly returns zero on the CSR snippet
 - **Schema conformity** -- passes `scripts/validate.py` on the first attempt
 
-## 5. Benchmark context
+## 6. Benchmark context
 
 The Spring 2026 phase of this same effort (issue #1747, PRs #1765-#1832)
 reported, after a metric-inflation bug fix, raw LLM recall of 36.8% and
@@ -161,6 +208,7 @@ sample of manual sections.
 python -m venv .venv
 .venv/bin/pip install pyyaml jsonschema      # + anthropic / openai if calling APIs
 python scripts/validate.py --results results/claude-sonnet-5   # should report 0 errors
+python scripts/validate.py --results results/claude-opus-4-8   # should report 0 errors
 python scripts/validate.py --results tests/bad_examples        # should report 4 errors (proves the check has teeth)
 
 # once ANTHROPIC_API_KEY / ZHIPU_API_KEY are set:

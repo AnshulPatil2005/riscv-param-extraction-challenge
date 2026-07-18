@@ -1,0 +1,24 @@
+$schema: param_schema.json#
+kind: parameter
+name: CACHE_CAPACITY
+long_name: Total capacity of a cache, in bytes
+description: |
+  The total capacity of a cache, in bytes. The manual declares this
+  implementation-specific; the execution environment provides software
+  a means to discover it at runtime.
+
+  NOTE: unlike CACHE_BLOCK_SIZE, cache capacity is not conceptually tied
+  to the CMO extensions -- any cache has a capacity whether or not CMO
+  instructions are implemented. The extension gating below mirrors the
+  source section (Priv 19.3.1, which sits under CMO) for consistency,
+  but the correct `definedBy` condition is a genuine modeling question
+  worth Parameter SIG input rather than something the excerpt settles.
+schema:
+  type: integer
+  minimum: 1
+definedBy:
+  extension:
+    anyOf:
+      - name: Zicbom
+      - name: Zicbop
+      - name: Zicboz

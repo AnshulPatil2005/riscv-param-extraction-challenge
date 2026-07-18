@@ -1,0 +1,19 @@
+Snippet: snippets/csr_address_mapping.txt
+Model: claude-opus-4-8 (v3 schema-constrained prompt)
+Result: zero parameters extracted.
+
+Reasoning: the excerpt contains no optionality language ("may", "might",
+"should", "optional"/"optionally", "implementation-defined"/
+"implementation-specific"). Every statement fixes an encoding convention
+that all conformant implementations follow identically:
+
+  - "the upper 4 bits ... are used to encode the read and write
+    accessibility" -- fixed convention.
+  - "The top two bits ... indicate whether the register is read/write
+    ... or read-only" -- fixed encoding.
+  - "The next two bits ... encode the lowest privilege level" -- fixed.
+
+The word "conventional" and the phrase "by convention" describe a fixed
+allocation scheme, not an implementation choice. Per rule 3, zero
+parameters is the correct answer. This matches the claude-sonnet-5 run,
+which also returned zero -- the negative control holds for both models.

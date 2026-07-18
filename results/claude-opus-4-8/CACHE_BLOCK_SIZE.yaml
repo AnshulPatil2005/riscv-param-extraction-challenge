@@ -1,0 +1,21 @@
+$schema: param_schema.json#
+kind: parameter
+name: CACHE_BLOCK_SIZE
+long_name: Size of a cache block, in bytes
+description: |
+  The size of a cache block, in bytes. A cache block is a contiguous,
+  naturally aligned power-of-two (NAPOT) range of memory locations,
+  identified by any of the physical addresses it covers.
+
+  In the initial set of CMO extensions this size is required to be
+  uniform throughout the system, so a single value describes every
+  cache block in the system rather than one value per cache.
+schema:
+  type: integer
+  minimum: 1
+definedBy:
+  extension:
+    anyOf:
+      - name: Zicbom
+      - name: Zicbop
+      - name: Zicboz

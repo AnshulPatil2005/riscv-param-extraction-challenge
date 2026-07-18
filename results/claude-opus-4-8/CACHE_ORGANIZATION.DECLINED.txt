@@ -1,0 +1,32 @@
+Snippet: snippets/cmo_cache_block.txt
+Model: claude-opus-4-8 (v3 schema-constrained prompt)
+Candidate: CACHE_ORGANIZATION -- NOT emitted as a parameter.
+
+Trigger present: yes. The clause "The capacity and organization of a
+cache ... are both implementation-specific" does contain the optionality
+language rule 1 asks for, so by the letter of rule 1 "organization" is a
+candidate.
+
+Why it is nonetheless declined:
+
+  A riscv-unified-db parameter must carry a `schema` describing a
+  checkable value space (integer with bounds, an enum, a boolean, etc.).
+  "Cache organization" (associativity, number of sets, replacement
+  policy, ...) has no value space the excerpt defines and no obvious
+  finite one at all. The only schema that could be written is an opaque
+  `type: string` that accepts literally any text -- which validates
+  nothing and is not a config value an implementation could meaningfully
+  be checked against.
+
+  Emitting such a parameter would satisfy the letter of the extraction
+  task while adding a field that carries no architectural constraint --
+  the schema-shaped equivalent of a false positive. Rule 3 explicitly
+  permits returning fewer parameters rather than forcing a match, so the
+  disciplined call is to surface "organization" as an observation for a
+  human/SIG to scope, not to mint an unconstrained parameter.
+
+This is a genuine judgment call, and it is exactly where the two models
+diverged: claude-sonnet-5 DID emit CACHE_ORGANIZATION as an opaque
+`type: string` (flagged in its description as needing SIG scoping);
+claude-opus-4-8 declines to emit it at all for the reason above. Both are
+defensible; see the README comparison section for the recommendation.
