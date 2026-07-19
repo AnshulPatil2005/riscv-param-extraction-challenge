@@ -1,0 +1,6 @@
+{
+  "NUM_PMP_ENTRIES": {
+    "quote": "Up to 64 PMP entries are supported. Implementations may implement zero, 16, or 64 PMP entries; the lowest-numbered PMP entries must be implemented first.",
+    "source_file": "robustness/cases/PMP_ENTRIES/raw_source.txt"
+  }
+}

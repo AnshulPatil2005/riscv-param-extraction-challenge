@@ -1,0 +1,16 @@
+$schema: param_schema.json#
+kind: parameter
+name: CACHE_BLOCK_SIZE
+long_name: Size of a cache block, in bytes
+description: |
+  The size of a cache block, in bytes. Implementation-specific, uniform
+  throughout the system for the initial set of CMO extensions.
+schema:
+  type: integer
+  minimum: 1
+definedBy:
+  extension:
+    anyOf:
+      - name: Zicbom
+      - name: Zicbop
+      - name: Zicboz

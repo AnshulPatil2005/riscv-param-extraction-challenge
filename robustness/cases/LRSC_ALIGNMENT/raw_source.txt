@@ -1,0 +1,10 @@
+Source: ext/riscv-isa-manual/src/unpriv/zalrsc.adoc, lines 74-81 (UNTOUCHED -- real AsciiDoc markup intact)
+
+[#norm:lr_sc_alignment]#For insn:lr[] and insn:sc[], the ext:zalrsc[] extension requires that the address held in _rs1_
+be naturally aligned to the size of the operand (i.e., eight-byte
+aligned for _doublewords_ and four-byte aligned for _words_). If the
+address is not naturally aligned, an address-misaligned exception or an
+access-fault exception will be generated. The access-fault exception can
+be generated for a memory access that would otherwise be able to
+complete except for the misalignment, if the misaligned access should
+not be emulated.#

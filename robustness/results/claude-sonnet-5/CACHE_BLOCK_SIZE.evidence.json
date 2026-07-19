@@ -1,0 +1,6 @@
+{
+  "CACHE_BLOCK_SIZE": {
+    "quote": "The capacity and organization of a cache and the size of a cache block are both implementation-specific, and the execution environment provides software a means to discover information about the caches and cache blocks in a system.",
+    "source_file": "robustness/cases/CMO_CACHE_BLOCK/raw_source.txt"
+  }
+}

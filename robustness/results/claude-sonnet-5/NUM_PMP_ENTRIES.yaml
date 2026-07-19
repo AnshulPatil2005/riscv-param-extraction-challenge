@@ -1,0 +1,14 @@
+$schema: param_schema.json#
+kind: parameter
+name: NUM_PMP_ENTRIES
+long_name: Number of implemented PMP entries
+description: |
+  The number of implemented PMP entries. Up to 64 are architecturally
+  supported; an implementation may implement zero, 16, or 64, with the
+  lowest-numbered entries implemented first.
+schema:
+  type: integer
+  enum: [0, 16, 64]
+definedBy:
+  extension:
+    name: Sm

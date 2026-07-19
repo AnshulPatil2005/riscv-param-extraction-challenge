@@ -1,0 +1,14 @@
+$schema: param_schema.json#
+kind: parameter
+name: LRSC_ALIGNMENT_EXCEPTION_KIND
+long_name: Exception raised for a misaligned LR/SC address
+description: |
+  When the rs1 address for LR or SC (Zalrsc) is not naturally aligned to
+  the operand size, whether an address-misaligned exception or an
+  access-fault exception is generated.
+schema:
+  type: string
+  enum: ["misaligned", "access_fault"]
+definedBy:
+  extension:
+    name: Zalrsc
