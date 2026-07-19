@@ -195,33 +195,80 @@ concrete design implications follow:
   but the exact version reported by the playground UI should be confirmed
   and the directory renamed if it differs (see
   [`results/glm-4.6/_raw_responses.txt`](results/glm-4.6/_raw_responses.txt)).
-- **Sample size:** this is an n=2-snippet probe. The numbers here
-  illustrate model *behavior differences*, not a benchmark score -- see §6.
+- **Sample size:** the model comparison in §4 is an n=2-snippet probe --
+  it illustrates model *behavior differences*, not a benchmark score. §6
+  below is a separate, larger (n=13) recall benchmark that gets closer to
+  an actual number, with its own caveats.
 - **API automation:** `scripts/extract.py` is written and ready
   (`ANTHROPIC_API_KEY` / `ZHIPU_API_KEY`) to reproduce all three legs
   automatically once keys are configured; the current results were produced
   by running the same prompt through each model directly.
 
-## 6. Benchmark context
+## 6. Recall benchmark (n=13, real merged parameters)
 
-The Spring 2026 phase of this same effort (issue #1747, PRs #1765-#1832)
-reported, after a metric-inflation bug fix, raw LLM recall of 36.8% and
-classification accuracy of ~68% against its labeled set. That's the
-number a "quality and implementation robustness" improvement (the Fall
-proposal's stated goal) needs to beat. This submission's n=2 sample is too
-small to claim a comparable score -- it's included here as the actual
-target to validate against once this approach is run over a larger, real
-sample of manual sections.
+The comparisons above are n=2. `benchmark/` is a larger, more real test:
+13 parameters that are already merged into `riscv-unified-db`, each
+re-paired with the *actual* ISA Manual prose it was derived from (found
+and independently verified against `ext/riscv-isa-manual` -- see
+`benchmark/cases/<NAME>/source.txt` and `ground_truth.yaml`). Two more
+candidates were investigated and deliberately excluded (`TRAP_ON_ECALL_FROM_VS`,
+`MTVEC_ILLEGAL_WRITE_BEHAVIOR`) because their only findable source passage
+was generic boilerplate, not text specific enough to count as solid ground
+truth -- logged here rather than silently dropped.
+
+The v3 prompt was run against each of the 13 raw passages independently,
+**without copying the answer** -- extraction names, descriptions, and
+schema choices were composed fresh from the source text alone, so a
+mismatch against the real YAML doesn't count against recall, only against
+a separate schema-fidelity metric:
+
+```
+$ python benchmark/scripts/score_recall.py --model claude-sonnet-5
+Recall (existence): 13/13 = 100%
+Schema+grounding valid (of hits): 13/13
+Schema-type fidelity (of hits): 9/13 = 69%
+```
+
+Every one of the 13 known-parameter passages was correctly recognized as
+warranting a parameter, and every extraction is schema-valid and grounded
+in a real quote. The **type-fidelity** number (69%) is the more honest
+signal: on 4/13 cases the extraction chose a different value-shape than
+the merged parameter (e.g. boolean vs. enum) -- same underlying constraint
+identified, different modeling choice. That's consistent with the earlier
+finding that *detecting* a parameter is the easy part; *modeling its value
+space* is where real judgment (and disagreement) lives.
+
+**Read this number carefully -- it is not a blind benchmark.** All 13
+cases are parameters that already exist in a public repository a frontier
+model has plausibly seen during pretraining. This measures "can the
+pipeline mechanically re-derive a known-good parameter from its real
+source text," which is a legitimate sanity check (the mechanics --
+grounding, schema conformity, trigger-language discipline -- are real and
+verified), but it is an upper bound, not a generalization estimate. A true
+blind test needs source text with no existing answer to leak from --
+candidates for that are the ~250 unresolved gaps the Spring pipeline
+flagged, or newly-drafted spec text not yet in any repo. Framed against
+the Spring pipeline's documented 36.8% recall: this result shows the
+*mechanics* of this approach work end-to-end at 13-case scale, not that it
+beats 36.8% on equal footing -- those numbers aren't measuring the same
+thing, and claiming otherwise would be the same kind of overclaim this
+whole submission is arguing against.
 
 ## How to run
 
 ```bash
 python -m venv .venv
 .venv/bin/pip install pyyaml jsonschema      # + anthropic / openai if calling APIs
+
 python scripts/validate.py --results results/claude-sonnet-5   # should report 0 errors
 python scripts/validate.py --results results/claude-opus-4-8   # should report 0 errors
 python scripts/validate.py --results results/glm-4.6           # should report 0 errors
 python scripts/validate.py --results tests/bad_examples        # should report 4 errors (proves the check has teeth)
+
+python scripts/score.py --results-root results                 # auto comparison table + disagreement detector
+
+python scripts/validate.py --results benchmark/results/claude-sonnet-5
+python benchmark/scripts/score_recall.py --model claude-sonnet-5
 
 # once ANTHROPIC_API_KEY / ZHIPU_API_KEY are set:
 python scripts/extract.py --model claude-opus-4-8 --snippet snippets/cmo_cache_block.txt
@@ -234,8 +281,9 @@ python scripts/extract.py --model glm-4.6 --provider zhipu --snippet snippets/cm
 prompts/    v1/v2/v3 prompt templates, each documenting the failure it fixes
 snippets/   the two ISA Manual excerpts given in the challenge
 schema/     param_schema.json + its dependencies, vendored from riscv/riscv-unified-db
-scripts/    extract.py (calls a model), validate.py (schema + grounding check)
-results/    extracted parameter YAML + evidence, per model
+scripts/    extract.py (calls a model), validate.py (schema+grounding check), score.py (auto comparison table + disagreement detector)
+results/    extracted parameter YAML + evidence, per model, for the 2 challenge snippets
+benchmark/  n=13 recall benchmark against real merged parameters (cases/, results/, scripts/score_recall.py)
 tests/      deliberately-broken fixtures proving validate.py fails closed
 ```
 
