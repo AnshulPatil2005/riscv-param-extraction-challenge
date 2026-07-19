@@ -1,5 +1,7 @@
 # RISC-V Architectural Parameter Extraction -- Coding Challenge
 
+![validate](https://github.com/AnshulPatil2005/riscv-param-extraction-challenge/actions/workflows/validate.yml/badge.svg)
+
 Submission for the LFX Fall 2026 mentorship *"AI-assisted extraction of
 architectural parameters from RISC-V specifications"* (Parameter SIG /
 [riscv/riscv-unified-db](https://github.com/riscv/riscv-unified-db)).
@@ -254,6 +256,84 @@ beats 36.8% on equal footing -- those numbers aren't measuring the same
 thing, and claiming otherwise would be the same kind of overclaim this
 whole submission is arguing against.
 
+## 7. Robustness to raw, untouched spec markup
+
+Every case above uses hand-cleaned prose -- real text, but with AsciiDoc
+markup (`[#norm:...]#...#` tags, `_italics_`, inline `csr:x[]` macros)
+stripped out for readability. That cleaning is exactly what the Spring 2026
+pipeline's own failure mode (PR #1832) was about: tag/markup handling broke
+when the manual's structure shifted under it. `robustness/` tests the same
+extraction against **raw, untouched** source -- three passages pulled
+directly from `ext/riscv-isa-manual` with zero cleanup, including one
+(`CACHE_BLOCK_SIZE`) that's the exact same underlying sentence as the
+challenge's own snippet, so the only variable is markup presence.
+
+```
+$ python robustness/scripts/check_grounding_modes.py --model claude-sonnet-5
+| Case | Naive match | Tag-aware match |
+|---|---|---|
+| CACHE_BLOCK_SIZE | FAIL | pass |
+| LRSC_ALIGNMENT_EXCEPTION_KIND | FAIL | pass |
+| NUM_PMP_ENTRIES | pass | pass |
+
+Naive grounding:     1/3
+Tag-aware grounding: 3/3
+```
+
+The extraction itself was unaffected -- all three raw passages produced
+correct, grounded parameters. But **naive substring grounding (the same
+check `scripts/validate.py` uses) fails 2/3 of them**, because the model
+naturally produces clean prose quotes that don't byte-match text
+interrupted by `_italics_` markers or `[#norm:...]#` tag wrappers. Running
+`scripts/validate.py` directly against `robustness/results/` reproduces
+this: it reports the same 2 false "possible hallucination" failures.
+`robustness/scripts/check_grounding_modes.py` adds a markup-stripping
+normalization step before comparing and recovers all 3 -- a small,
+concrete demonstration of exactly the class of bug that hurt the prior
+pipeline, plus a working fix, not just a description of the risk. (One
+case, `NUM_PMP_ENTRIES`, happened to pass naive grounding anyway -- its
+tag boundaries landed on clean word breaks. Not every markup placement
+breaks naive matching; this is why the test uses three real, differently-
+structured passages instead of one.)
+
+## 8. Hard negative controls
+
+The CSR snippet (§3) is a clean negative control -- no optionality
+language at all. `negative_controls/` is a harder test: two more real
+passages that **do** contain the literal trigger words ("should" x3 in
+each) but describe software-facing advice, not implementation-configurable
+hardware behavior --
+
+- `MTIP_SPURIOUS_INTERRUPT` -- guidance telling *software authors* to
+  tolerate a spurious timer interrupt, not a hardware implementation choice
+- `BRANCH_PREDICTION_ADVICE` -- compiler/software optimization advice
+  about branch layout, not a configurable predictor parameter
+
+```
+$ python negative_controls/scripts/check_negatives.py --model claude-sonnet-5
+[PASS (correctly zero)] BRANCH_PREDICTION_ADVICE
+[PASS (correctly zero)] MTIP_SPURIOUS_INTERRUPT
+
+2 case(s) checked, 0 failure(s)
+```
+
+Both correctly return zero parameters -- proof the extraction is keying on
+"does this describe an implementation choice," not just "does this
+sentence contain the word 'should'." A prompt that pattern-matches on
+keyword presence alone would have over-triggered on both.
+
+## 9. Scale and cost
+
+All of the above runs on curated snippets. [`docs/scale_and_cost.md`](docs/scale_and_cost.md)
+measures the real ISA manual (147 files, 284,854 words, 845 natural
+section-sized chunks) and, using verified current Anthropic pricing (not
+guessed), estimates the cost of a full pass: **Sonnet 5 + Opus 4.8
+together, one full pass each over the entire current manual, costs on the
+order of $10.50 with basic prompt caching, ~$14.90 without it.** The
+takeaway: cost is not what limits this approach from scaling -- the
+grounding, schema-fidelity, and markup-robustness questions tested above
+are the actual bottleneck, not API spend.
+
 ## How to run
 
 ```bash
@@ -270,6 +350,11 @@ python scripts/score.py --results-root results                 # auto comparison
 python scripts/validate.py --results benchmark/results/claude-sonnet-5
 python benchmark/scripts/score_recall.py --model claude-sonnet-5
 
+python robustness/scripts/check_grounding_modes.py --model claude-sonnet-5   # naive vs tag-aware grounding
+python negative_controls/scripts/check_negatives.py --model claude-sonnet-5  # hard negative controls
+
+bash scripts/ci_check.sh   # everything above, in one gated pass -- same as CI
+
 # once ANTHROPIC_API_KEY / ZHIPU_API_KEY are set:
 python scripts/extract.py --model claude-opus-4-8 --snippet snippets/cmo_cache_block.txt
 python scripts/extract.py --model glm-4.6 --provider zhipu --snippet snippets/cmo_cache_block.txt
@@ -278,13 +363,17 @@ python scripts/extract.py --model glm-4.6 --provider zhipu --snippet snippets/cm
 ## Repo layout
 
 ```
-prompts/    v1/v2/v3 prompt templates, each documenting the failure it fixes
-snippets/   the two ISA Manual excerpts given in the challenge
-schema/     param_schema.json + its dependencies, vendored from riscv/riscv-unified-db
-scripts/    extract.py (calls a model), validate.py (schema+grounding check), score.py (auto comparison table + disagreement detector)
-results/    extracted parameter YAML + evidence, per model, for the 2 challenge snippets
-benchmark/  n=13 recall benchmark against real merged parameters (cases/, results/, scripts/score_recall.py)
-tests/      deliberately-broken fixtures proving validate.py fails closed
+prompts/            v1/v2/v3 prompt templates + prompts/rendered/ (paste-ready, schema+snippet filled in)
+snippets/            the two ISA Manual excerpts given in the challenge
+schema/              param_schema.json + its dependencies, vendored from riscv/riscv-unified-db
+scripts/             extract.py, validate.py, score.py, ci_check.sh (runs everything below in one gate)
+results/             extracted parameter YAML + evidence, per model, for the 2 challenge snippets
+benchmark/           n=13 recall benchmark against real merged parameters
+robustness/          raw-markup grounding test (naive vs tag-aware substring matching)
+negative_controls/   hard negative controls -- real "should"/"may" text that isn't a parameter
+docs/                scale_and_cost.md -- real manual measurements + verified pricing estimate
+tests/               deliberately-broken fixtures proving validate.py fails closed
+.github/workflows/   CI: runs scripts/ci_check.sh on every push
 ```
 
 `schema/` is vendored from
