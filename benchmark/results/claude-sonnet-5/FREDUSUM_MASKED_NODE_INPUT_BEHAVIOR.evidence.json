@@ -1,0 +1,6 @@
+{
+  "FREDUSUM_MASKED_NODE_INPUT_BEHAVIOR": {
+    "quote": "A node where one input is derived only from elements masked-off or beyond the active vector length may either treat that input as the additive identity of the appropriate EEW or simply copy the other input to its output.",
+    "source_file": "benchmark/cases/VFREDUSUM_INACTIVE_NODE_ELEMENT_BEHAVIOR/source.txt"
+  }
+}

@@ -1,0 +1,14 @@
+$schema: param_schema.json#
+kind: parameter
+name: VSTART_UNPRODUCIBLE_VALUE_TRAP
+long_name: Whether vstart values the implementation can never produce trap
+description: |
+  Whether the implementation raises an illegal-instruction exception when
+  a vector instruction is executed with a `vstart` value that the
+  implementation itself could never have produced under the same `vtype`
+  setting.
+schema:
+  type: boolean
+definedBy:
+  extension:
+    name: V

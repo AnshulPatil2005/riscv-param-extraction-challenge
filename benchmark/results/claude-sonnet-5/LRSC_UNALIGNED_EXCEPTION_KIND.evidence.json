@@ -1,0 +1,6 @@
+{
+  "LRSC_UNALIGNED_EXCEPTION_KIND": {
+    "quote": "If the address is not naturally aligned, an address-misaligned exception or an access-fault exception will be generated.",
+    "source_file": "benchmark/cases/LRSC_MISALIGNED_BEHAVIOR/source.txt"
+  }
+}

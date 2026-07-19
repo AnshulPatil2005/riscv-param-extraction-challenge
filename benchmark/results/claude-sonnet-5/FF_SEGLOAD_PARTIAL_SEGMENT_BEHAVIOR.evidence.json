@@ -1,0 +1,6 @@
+{
+  "FF_SEGLOAD_PARTIAL_SEGMENT_BEHAVIOR": {
+    "quote": "In both cases, it is implementation-defined whether a subset of the segment is loaded.",
+    "source_file": "benchmark/cases/VECTOR_FF_SEG_EXCEPTION_PARTIAL_LOAD/source.txt"
+  }
+}

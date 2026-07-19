@@ -1,0 +1,6 @@
+{
+  "MISALIGNED_EXCEPTION_PRIORITY": {
+    "quote": "Load/store/AMO address-misaligned exceptions may have either higher or lower priority than load/store/AMO page-fault and access-fault exceptions. The relative priority of load/store/AMO address-misaligned and page-fault exceptions is implementation-defined to flexibly cater to two design points.",
+    "source_file": "benchmark/cases/MISALIGNED_LDST_EXCEPTION_PRIORITY/source.txt"
+  }
+}

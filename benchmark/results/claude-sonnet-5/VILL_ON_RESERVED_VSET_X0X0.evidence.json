@@ -1,0 +1,6 @@
+{
+  "VILL_ON_RESERVED_VSET_X0X0": {
+    "quote": "Use of the instructions with a new SEW/LMUL ratio that would result in a change of VLMAX is reserved. Use of the instructions is also reserved if vill was 1 beforehand. Implementations may set vill in either case.",
+    "source_file": "benchmark/cases/RESERVED_VSET_X0X0_VLMAX_CHANGE/source.txt"
+  }
+}

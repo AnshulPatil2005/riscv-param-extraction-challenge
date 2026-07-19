@@ -1,0 +1,6 @@
+{
+  "PMP_GRAIN_SIZE": {
+    "quote": "Although the PMP mechanism supports regions as small as four bytes, platforms may specify coarser PMP regions. In general, the PMP grain is 2^G+2 bytes and must be the same across all PMP regions.",
+    "source_file": "benchmark/cases/PMP_GRANULARITY/source.txt"
+  }
+}

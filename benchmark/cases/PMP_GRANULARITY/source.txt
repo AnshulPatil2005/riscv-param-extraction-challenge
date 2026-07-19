@@ -1,0 +1,5 @@
+Source: RISC-V Privileged ISA Manual, priv/machine.adoc (Physical Memory Protection CSRs)
+
+Although the PMP mechanism supports regions as small as four bytes,
+platforms may specify coarser PMP regions. In general, the PMP grain is
+2^G+2 bytes and must be the same across all PMP regions.

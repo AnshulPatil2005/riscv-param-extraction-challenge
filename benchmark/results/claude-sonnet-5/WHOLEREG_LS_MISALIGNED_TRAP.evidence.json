@@ -1,0 +1,6 @@
+{
+  "WHOLEREG_LS_MISALIGNED_TRAP": {
+    "quote": "Implementations are allowed to raise a misaligned address exception on whole register loads and stores if the base address is not naturally aligned to the larger of the size of the encoded EEW in bytes (EEW/8) or the implementation's smallest supported SEW size in bytes (SEW_MIN/8).",
+    "source_file": "benchmark/cases/VECTOR_LS_WHOLEREG_MISALIGNED_LEGAL/source.txt"
+  }
+}

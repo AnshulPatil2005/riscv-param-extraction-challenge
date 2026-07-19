@@ -1,0 +1,14 @@
+$schema: param_schema.json#
+kind: parameter
+name: FF_SEGLOAD_PARTIAL_SEGMENT_BEHAVIOR
+long_name: Whether a partial segment is loaded before a fault-only-first trap
+description: |
+  For fault-only-first segment loads, when an exception is detected
+  partway through a (non-zeroth) segment, whether a subset of that
+  segment is loaded before the trap is taken. Implementation-defined per
+  the manual.
+schema:
+  type: boolean
+definedBy:
+  extension:
+    name: V

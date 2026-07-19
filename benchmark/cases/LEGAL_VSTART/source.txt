@@ -1,0 +1,6 @@
+Source: RISC-V Unprivileged ISA Manual, unpriv/vector-common.adoc (Vector Extension, vstart CSR)
+
+Implementations are permitted to raise illegal-instruction exceptions
+when attempting to execute a vector instruction with a value of vstart
+that the implementation can never produce when executing that same
+instruction with the same vtype setting.

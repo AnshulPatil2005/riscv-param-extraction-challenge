@@ -1,0 +1,13 @@
+$schema: param_schema.json#
+kind: parameter
+name: TIME_CSR_EMULATED
+long_name: Whether the time CSR is real hardware or emulated
+description: |
+  Whether reads of the `time`/`timeh` CSRs are serviced by real hardware
+  shadowing `mtime`, or are instead emulated (e.g. trapped and handled by
+  M-mode software) on behalf of less-privileged modes.
+schema:
+  type: boolean
+definedBy:
+  extension:
+    name: Sm

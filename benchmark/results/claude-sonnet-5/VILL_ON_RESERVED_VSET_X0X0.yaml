@@ -1,0 +1,13 @@
+$schema: param_schema.json#
+kind: parameter
+name: VILL_ON_RESERVED_VSET_X0X0
+long_name: Whether vill is set on reserved rs1=x0,rd=x0 vset forms
+description: |
+  When rs1=x0 and rd=x0 is used with a new SEW/LMUL ratio that would
+  change VLMAX (a reserved encoding), whether the implementation sets
+  `vill` in response.
+schema:
+  type: boolean
+definedBy:
+  extension:
+    name: V

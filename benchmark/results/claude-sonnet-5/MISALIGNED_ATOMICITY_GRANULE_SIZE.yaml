@@ -1,0 +1,14 @@
+$schema: param_schema.json#
+kind: parameter
+name: MISALIGNED_ATOMICITY_GRANULE_SIZE
+long_name: Size of the misaligned atomicity granule, in bytes
+description: |
+  If the misaligned atomicity granule PMA is present, the naturally
+  aligned power-of-two granule size (in bytes) within which a misaligned
+  AMO is guaranteed atomic. 0 if the PMA is not present.
+schema:
+  type: integer
+  minimum: 0
+definedBy:
+  extension:
+    name: Sm

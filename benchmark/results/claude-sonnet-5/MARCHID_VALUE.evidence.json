@@ -1,0 +1,6 @@
+{
+  "MARCHID_VALUE": {
+    "quote": "This register must be readable in any implementation, but a value of 0 can be returned to indicate the field is not implemented. The combination of mvendorid and marchid should uniquely identify the type of hart microarchitecture that is implemented.",
+    "source_file": "benchmark/cases/ARCH_ID_VALUE/source.txt"
+  }
+}

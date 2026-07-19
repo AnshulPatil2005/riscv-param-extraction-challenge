@@ -1,0 +1,14 @@
+$schema: param_schema.json#
+kind: parameter
+name: MISALIGNED_EXCEPTION_PRIORITY
+long_name: Relative priority of misaligned vs page-fault/access-fault exceptions
+description: |
+  Whether load/store/AMO address-misaligned exceptions are given higher
+  or lower priority than page-fault and access-fault exceptions on the
+  same access. Implementation-defined.
+schema:
+  type: string
+  enum: ["higher", "lower"]
+definedBy:
+  extension:
+    name: Sm

@@ -1,0 +1,19 @@
+$schema: param_schema.json#
+kind: parameter
+name: MISALIGNED_LDST_EXCEPTION_PRIORITY
+long_name: |
+  The relative priority of a load/store/AMO exception vs. load/store/AMO page-fault
+  or access-fault exceptions.
+definedBy:
+  extension:
+    name: Sm
+description: |
+  The relative priority of a load/store/AMO exception vs. load/store/AMO page-fault
+  or access-fault exceptions.
+
+  May be one of:
+    low: Misaligned load/store/AMO exceptions are always lower priority than load/store/AMO page-fault and access-fault exceptions.
+    high: Misaligned load/store/AMO exceptions are always higher priority than load/store/AMO page-fault and access-fault exceptions.
+schema:
+  type: string
+  enum: ["low", "high"]

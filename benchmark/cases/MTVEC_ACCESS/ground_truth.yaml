@@ -1,0 +1,15 @@
+$schema: param_schema.json#
+kind: parameter
+name: MTVEC_ACCESS
+long_name: |
+  Acess type of the `mtvec` CSR (read-only or read-write).
+definedBy:
+  extension:
+    name: Sm
+description: |
+  Options:
+    ro: `mtvec` is read-only.
+    rw: `mtvec` is read-write, but may not accept all values.
+schema:
+  type: string
+  enum: ["ro", "rw"]

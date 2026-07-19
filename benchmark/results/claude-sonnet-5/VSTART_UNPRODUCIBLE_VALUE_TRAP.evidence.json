@@ -1,0 +1,6 @@
+{
+  "VSTART_UNPRODUCIBLE_VALUE_TRAP": {
+    "quote": "Implementations are permitted to raise illegal-instruction exceptions when attempting to execute a vector instruction with a value of vstart that the implementation can never produce when executing that same instruction with the same vtype setting.",
+    "source_file": "benchmark/cases/LEGAL_VSTART/source.txt"
+  }
+}

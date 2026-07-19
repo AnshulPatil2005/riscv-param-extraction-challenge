@@ -1,0 +1,11 @@
+Source: RISC-V Unprivileged ISA Manual, unpriv/vector-common.adoc (Vector Unordered Single-Width Floating-Point Sum Reduction)
+
+The implementation must produce a result equivalent to a reduction tree
+composed of binary operator nodes, with the inputs being elements from
+the source vector register group (vs2) and the source scalar value
+(vs1[0]). Each operator in the tree accepts two inputs and produces one
+result. A different floating-point range and precision may be chosen
+for the result of each operator. A node where one input is derived only
+from elements masked-off or beyond the active vector length may either
+treat that input as the additive identity of the appropriate EEW or
+simply copy the other input to its output.

@@ -1,0 +1,14 @@
+$schema: param_schema.json#
+kind: parameter
+name: MARCHID_VALUE
+long_name: Value returned by the marchid CSR
+description: |
+  The value of `marchid`. May be 0 to indicate the field is not
+  implemented; otherwise, combined with `mvendorid`, should uniquely
+  identify the hart microarchitecture.
+schema:
+  type: integer
+  minimum: 0
+definedBy:
+  extension:
+    name: Sm

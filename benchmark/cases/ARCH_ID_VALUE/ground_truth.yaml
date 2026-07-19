@@ -1,0 +1,20 @@
+$schema: param_schema.json#
+kind: parameter
+name: ARCH_ID_VALUE
+long_name: Vendor-specific architecture ID in `marchid`
+definedBy:
+  allOf:
+    - extension:
+        name: Sm
+    - param:
+        name: MARCHID_IMPLEMENTED
+        equal: true
+        reason: When `marchid` is not implemented, its value is not relevant.
+description: |
+  The value of `marchid`
+  The combination of mvendorid and marchid should uniquely identify the type of hart microarchitecture that is implemented.
+schema:
+  allOf:
+    - $ref: schema_defs.json#/$defs/uint64
+    - not:
+        const: 0

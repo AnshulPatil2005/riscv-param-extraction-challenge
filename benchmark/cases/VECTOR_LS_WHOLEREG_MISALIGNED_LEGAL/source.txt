@@ -1,0 +1,6 @@
+Source: RISC-V Unprivileged ISA Manual, unpriv/vector-common.adoc (whole register loads/stores)
+
+Implementations are allowed to raise a misaligned address exception on
+whole register loads and stores if the base address is not naturally
+aligned to the larger of the size of the encoded EEW in bytes (EEW/8) or
+the implementation's smallest supported SEW size in bytes (SEW_MIN/8).

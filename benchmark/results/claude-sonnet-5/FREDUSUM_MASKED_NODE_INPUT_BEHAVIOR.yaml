@@ -1,0 +1,15 @@
+$schema: param_schema.json#
+kind: parameter
+name: FREDUSUM_MASKED_NODE_INPUT_BEHAVIOR
+long_name: How a floating-point reduction tree node treats a masked-off input
+description: |
+  For the vector floating-point sum reduction tree, whether a node whose
+  input is derived only from masked-off/out-of-vl elements treats that
+  input as the additive identity, or instead copies the other input
+  through unchanged.
+schema:
+  type: string
+  enum: ["additive_identity", "copy_through"]
+definedBy:
+  extension:
+    name: V

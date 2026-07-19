@@ -1,0 +1,15 @@
+$schema: param_schema.json#
+kind: parameter
+name: LEGAL_VSTART
+description: |
+  Implementations may raise illegal-instruction exceptions for vector
+  instructions that specify a `vstart` value the implementation can never
+  produce under the same `vtype` configuration (e.g., due to restrictions
+  on supported strides or alignments).
+long_name: TODO
+schema:
+  type: string
+  enum: ["1_stride", "2_stride", "4_stride", "custom"]
+definedBy:
+  extension:
+    name: Zvl32b

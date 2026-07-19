@@ -1,0 +1,8 @@
+Source: RISC-V Privileged ISA Manual, priv/machine.adoc (Misaligned Atomicity Granule PMA)
+
+The misaligned atomicity granule PMA provides constrained support for
+misaligned AMOs. This PMA, if present, specifies the size of a
+misaligned atomicity granule, a naturally aligned power-of-two number of
+bytes. Specific supported values for this PMA are represented by MAGNN,
+e.g., MAG16 indicates the misaligned atomicity granule is at least 16
+bytes.

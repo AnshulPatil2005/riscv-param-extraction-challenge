@@ -1,0 +1,14 @@
+$schema: param_schema.json#
+kind: parameter
+name: WHOLEREG_LS_MISALIGNED_TRAP
+long_name: Whether misaligned whole-register vector loads/stores trap
+description: |
+  Whether the implementation raises a misaligned address exception on
+  whole-register vector loads/stores when the base address is not
+  naturally aligned to the larger of the encoded EEW size or the
+  implementation's smallest supported SEW size, both in bytes.
+schema:
+  type: boolean
+definedBy:
+  extension:
+    name: V

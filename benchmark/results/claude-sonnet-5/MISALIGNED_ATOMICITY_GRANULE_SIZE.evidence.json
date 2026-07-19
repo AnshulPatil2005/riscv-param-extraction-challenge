@@ -1,0 +1,6 @@
+{
+  "MISALIGNED_ATOMICITY_GRANULE_SIZE": {
+    "quote": "This PMA, if present, specifies the size of a misaligned atomicity granule, a naturally aligned power-of-two number of bytes.",
+    "source_file": "benchmark/cases/MISALIGNED_MAX_ATOMICITY_GRANULE_SIZE/source.txt"
+  }
+}

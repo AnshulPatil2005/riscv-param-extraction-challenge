@@ -1,0 +1,12 @@
+$schema: param_schema.json#
+kind: parameter
+name: MTVEC_READ_ONLY
+long_name: Whether mtvec is read-only or writable
+description: |
+  Whether the `mtvec` register is read-only or writable. `mtvec` must
+  always exist, but is permitted to be a fixed, read-only value.
+schema:
+  type: boolean
+definedBy:
+  extension:
+    name: Sm

@@ -1,0 +1,14 @@
+$schema: param_schema.json#
+kind: parameter
+name: PMP_GRAIN_SIZE
+long_name: log2 of the smallest supported PMP region size
+description: |
+  Platforms may specify PMP regions coarser than the architecturally
+  minimal 4 bytes. The PMP grain is 2^(G+2) bytes and must be uniform
+  across all PMP regions; this parameter is G.
+schema:
+  type: integer
+  minimum: 0
+definedBy:
+  extension:
+    name: Sm

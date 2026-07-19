@@ -1,0 +1,9 @@
+Source: RISC-V Unprivileged ISA Manual, unpriv/vector-common.adoc (vset{i}vl{i} instructions)
+
+When rs1=x0 and rd=x0, the instructions operate as if the current vector
+length in vl is used as the AVL, and the resulting value is written to
+vl, but not to a destination register. This form can only be used when
+VLMAX and hence vl is not actually changed by the new SEW/LMUL ratio.
+Use of the instructions with a new SEW/LMUL ratio that would result in a
+change of VLMAX is reserved. Use of the instructions is also reserved if
+vill was 1 beforehand. Implementations may set vill in either case.

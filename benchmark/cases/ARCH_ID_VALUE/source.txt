@@ -1,0 +1,8 @@
+Source: RISC-V Privileged ISA Manual, priv/machine.adoc (marchid CSR)
+
+The marchid CSR is an MXLEN-bit read-only register encoding the base
+microarchitecture of the hart. This register must be readable in any
+implementation, but a value of 0 can be returned to indicate the field
+is not implemented. The combination of mvendorid and marchid should
+uniquely identify the type of hart microarchitecture that is
+implemented.

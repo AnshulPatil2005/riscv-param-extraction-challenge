@@ -1,0 +1,78 @@
+{
+  "_comment": "Maps each benchmark/cases/<CASE_NAME>/ to the independently-named extraction this run produced for it. Extraction names were chosen without copying the case's ground_truth.yaml name, so recall is scored on concept-match (same real-world thing modeled), not string-match. 'schema_type_match' records whether the extraction's schema.type family agrees with ground_truth.yaml's -- a stricter, separate metric from recall.",
+  "LEGAL_VSTART": {
+    "extracted_as": "VSTART_UNPRODUCIBLE_VALUE_TRAP",
+    "hit": true,
+    "schema_type_match": false,
+    "note": "Ground truth's schema (enum of stride types) doesn't obviously derive from its own description text either -- see README caveat."
+  },
+  "RESERVED_VSET_X0X0_VLMAX_CHANGE": {
+    "extracted_as": "VILL_ON_RESERVED_VSET_X0X0",
+    "hit": true,
+    "schema_type_match": false,
+    "note": "Same pattern as LEGAL_VSTART: ground truth's enum (never/always/custom) isn't clearly traceable to the description."
+  },
+  "VECTOR_LS_WHOLEREG_MISALIGNED_LEGAL": {
+    "extracted_as": "WHOLEREG_LS_MISALIGNED_TRAP",
+    "hit": true,
+    "schema_type_match": true
+  },
+  "VECTOR_FF_SEG_EXCEPTION_PARTIAL_LOAD": {
+    "extracted_as": "FF_SEGLOAD_PARTIAL_SEGMENT_BEHAVIOR",
+    "hit": true,
+    "schema_type_match": false,
+    "note": "Ground truth models this as an enum (no_subsegment_loaded/custom); extraction modeled it as boolean."
+  },
+  "VFREDUSUM_INACTIVE_NODE_ELEMENT_BEHAVIOR": {
+    "extracted_as": "FREDUSUM_MASKED_NODE_INPUT_BEHAVIOR",
+    "hit": true,
+    "schema_type_match": true,
+    "note": "Near-identical enum values to ground truth (additive_identity/copy_through vs additive_identity/copy)."
+  },
+  "NUM_PMP_ENTRIES": {
+    "extracted_as": "NUM_PMP_ENTRIES",
+    "hit": true,
+    "schema_type_match": true,
+    "note": "Exact match: integer enum [0, 16, 64]."
+  },
+  "PMP_GRANULARITY": {
+    "extracted_as": "PMP_GRAIN_SIZE",
+    "hit": true,
+    "schema_type_match": true,
+    "note": "Same type, different encoding convention: extraction models raw G, ground truth models G+2."
+  },
+  "MISALIGNED_MAX_ATOMICITY_GRANULE_SIZE": {
+    "extracted_as": "MISALIGNED_ATOMICITY_GRANULE_SIZE",
+    "hit": true,
+    "schema_type_match": true,
+    "note": "Ground truth is more precise (enum of specific powers of two); extraction only bounded minimum >= 0."
+  },
+  "MISALIGNED_LDST_EXCEPTION_PRIORITY": {
+    "extracted_as": "MISALIGNED_EXCEPTION_PRIORITY",
+    "hit": true,
+    "schema_type_match": true
+  },
+  "LRSC_MISALIGNED_BEHAVIOR": {
+    "extracted_as": "LRSC_UNALIGNED_EXCEPTION_KIND",
+    "hit": true,
+    "schema_type_match": true,
+    "note": "Ground truth has a third 'custom' option the extraction didn't include."
+  },
+  "ARCH_ID_VALUE": {
+    "extracted_as": "MARCHID_VALUE",
+    "hit": true,
+    "schema_type_match": true
+  },
+  "MTVEC_ACCESS": {
+    "extracted_as": "MTVEC_READ_ONLY",
+    "hit": true,
+    "schema_type_match": false,
+    "note": "Ground truth models as a string enum (ro/rw); extraction modeled as boolean -- same information, different shape."
+  },
+  "TIME_CSR_IMPLEMENTED": {
+    "extracted_as": "TIME_CSR_EMULATED",
+    "hit": true,
+    "schema_type_match": true,
+    "note": "Slight framing difference: ground truth asks 'does it exist', extraction asks 'is it emulated' -- adjacent but not identical question."
+  }
+}
