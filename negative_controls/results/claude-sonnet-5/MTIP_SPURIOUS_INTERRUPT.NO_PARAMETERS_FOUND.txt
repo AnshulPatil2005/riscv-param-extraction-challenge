@@ -1,0 +1,26 @@
+Snippet: negative_controls/cases/MTIP_SPURIOUS_INTERRUPT/source.txt
+Model: claude-sonnet-5 (v3 schema-constrained prompt)
+Result: zero parameters extracted.
+
+Reasoning: this is a HARD negative control -- the text contains the literal
+keyword "should" three times, so a prompt that pattern-matches on keyword
+presence alone would likely over-trigger here. On inspection, none of the
+three "should" instances describe an implementation choice:
+
+  - "guaranteed to be reflected in MTIP eventually, but not necessarily
+    immediately" -- this describes a fixed, mandatory timing guarantee
+    every implementation must provide (non-immediate propagation is
+    allowed, but there's no implementation-selectable value here; there's
+    nothing to parameterize -- "eventually, not necessarily immediately"
+    is not a choice with alternatives, it's the entire specified
+    behavior).
+  - "All software should be written to assume this event is possible" --
+    advice directed AT SOFTWARE AUTHORS about how to write robust code,
+    not a statement about what a hardware implementation may choose to
+    do. The "may/should" trigger rule targets implementation-facing
+    optionality, not software-facing recommendations.
+  - "most software should assume this event is extremely unlikely" --
+    same: advisory guidance to programmers, not a hardware parameter.
+
+No implementation-specific hardware behavior is described anywhere in this
+excerpt. Correctly returning zero here is the point of this test case.

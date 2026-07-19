@@ -1,0 +1,23 @@
+Snippet: negative_controls/cases/BRANCH_PREDICTION_ADVICE/source.txt
+Model: claude-sonnet-5 (v3 schema-constrained prompt)
+Result: zero parameters extracted.
+
+Reasoning: another hard negative control -- "should" appears three times
+("Software should be optimized...", "Software should also assume...",
+"Dynamic predictors should quickly learn..."), and the topic (branch
+prediction) is exactly the kind of microarchitectural subject that a naive
+extractor might assume implies a hardware-configurable parameter.
+
+But every sentence here is compiler/software-optimization advice --
+guidance for how to arrange code given a *generic, already-assumed*
+branch-prediction behavior (backward-taken/forward-not-taken as a
+starting heuristic). It does not describe an implementation choosing
+between alternative hardware behaviors; there is no "the implementation
+may do X or Y" structure anywhere in the text. It is advisory prose aimed
+at compiler/software authors, not a normative statement about
+implementation-defined hardware behavior.
+
+Correctly returning zero here, despite the topical proximity to real
+microarchitectural parameters (e.g. branch predictor size/type, which
+this excerpt never actually describes as configurable), is the point of
+this test case.

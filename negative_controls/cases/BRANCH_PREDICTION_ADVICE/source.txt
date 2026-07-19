@@ -1,0 +1,8 @@
+Source: RISC-V Unprivileged ISA Manual, unpriv/rv32.adoc (branch instructions)
+
+Software should be optimized such that the sequential code path is the
+most common path, with less-frequently taken code paths placed out of
+line. Software should also assume that backward branches will be
+predicted taken and forward branches as not taken, at least the first
+time they are encountered. Dynamic predictors should quickly learn any
+predictable branch behavior.
