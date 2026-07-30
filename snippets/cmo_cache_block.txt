@@ -1,4 +1,7 @@
-Source: RISC-V Privileged ISA Manual, Section 19.3.1 (Cache Management Operations)
+Source: RISC-V Unprivileged ISA Manual, src/unpriv/cmo.adoc lines 86-92
+("Memory and Caches", under "Background", Cache Management Operations chapter).
+NOTE: the challenge document labels this passage "Privileged Spec 19.3.1". It is
+in the unprivileged manual, not the privileged one. See CORRECTIONS.md.
 
 Caches organize copies of data into cache blocks, each of which represents a
 contiguous, naturally aligned power-of-two (or NAPOT) range of memory

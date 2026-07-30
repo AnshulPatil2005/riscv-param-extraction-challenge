@@ -76,7 +76,10 @@ $ python scripts/validate.py --results tests/bad_examples
 
 ## 3. Results
 
-### Snippet 1 -- CMO cache blocks (Privileged Spec 19.3.1)
+### Snippet 1 -- CMO cache blocks (`unpriv/cmo.adoc` lines 86-92)
+
+> The challenge document labels this passage "Privileged Spec 19.3.1". It is
+> in the **unprivileged** manual. See [CORRECTIONS.md](CORRECTIONS.md).
 
 Three parameters extracted, in `results/claude-sonnet-5/`:
 
@@ -115,13 +118,18 @@ gated on `Zicbom`/`Zicbop`/`Zicboz`. That gives a rare thing for this kind
 of exercise: real ground truth to grade the extraction against, not just
 self-assessment. Comparing:
 
-- Both agree on `type: integer`, `minimum: 1`, and the `anyOf` extension
-  gating.
-- The upstream version's `maximum` is `18446744073709551615` (i.e.
-  `2**64 - 1`) -- functionally no upper bound at all. The extraction here
-  omits `maximum` entirely, which is the more honest representation of
-  "the spec places no upper bound," rather than encoding "no bound" as a
-  very large number.
+- Both agree on `type: integer` and the `anyOf` extension gating.
+- **My first pass got the schema wrong, and this is the useful finding.** It
+  wrote `minimum: 1` with no upper bound. But the sentence it correctly
+  quoted says "naturally aligned power-of-two (or NAPOT) range" -- the
+  power-of-two constraint was in the text and went unencoded. Upstream
+  [PR #2189](https://github.com/riscv/riscv-unified-db/pull/2189) (merged)
+  now expresses exactly that as an enum of powers of two.
+  `results/claude-sonnet-5/CACHE_BLOCK_SIZE.yaml` is corrected to match; see
+  [CORRECTIONS.md](CORRECTIONS.md).
+- The lesson is the limit of grounding: the quote was genuine, the source
+  reference was checkable, and `validate.py` passed. Grounding tests where a
+  sentence came from, not whether the model modelled it properly.
 
 ### Snippet 2 -- CSR address mapping (Privileged Spec 2.1)
 
@@ -175,9 +183,11 @@ grounded, schema-valid, and it aced the negative control. Its failure mode
 is not hallucination (low precision) but **omission (low recall)**.
 
 **Why this matters for the project.** The Spring 2026 pipeline's documented
-weakness was recall (36.8%), not precision -- and this n=2 probe reproduces
-exactly that shape on the open-weight model: safe but incomplete. Two
-concrete design implications follow:
+weakness was recall, not precision. Its v2 run reported 69.7% raw recall and
+88.4% classification accuracy (v1: 60.0% / 67.9%), with per-class recall
+much more uneven than the headline: `NORM_DIRECT` 83%, `NORM_CSR_RW` 63%,
+`NORM_CSR_WARL` 50%. This n=2 probe reproduces that shape on the open-weight
+model: safe but incomplete. Two concrete design implications follow:
 
 1. **Model choice is a recall decision here, not a precision one.** All
    three models are trustworthy when they *do* extract; they differ in how
@@ -248,13 +258,13 @@ source text," which is a legitimate sanity check (the mechanics --
 grounding, schema conformity, trigger-language discipline -- are real and
 verified), but it is an upper bound, not a generalization estimate. A true
 blind test needs source text with no existing answer to leak from --
-candidates for that are the ~250 unresolved gaps the Spring pipeline
-flagged, or newly-drafted spec text not yet in any repo. Framed against
-the Spring pipeline's documented 36.8% recall: this result shows the
-*mechanics* of this approach work end-to-end at 13-case scale, not that it
-beats 36.8% on equal footing -- those numbers aren't measuring the same
-thing, and claiming otherwise would be the same kind of overclaim this
-whole submission is arguing against.
+candidates for that are the ~230 unresolved gaps the Spring pipeline
+flagged, or newly-drafted spec text not yet in any repo. It is also not
+comparable to the Spring pipeline's reported recall (69.7% raw / 88.4%
+classification on v2): that was measured across the whole manual against a
+185-parameter ground truth, this is 13 hand-picked cases. The two numbers
+are not measuring the same thing, and treating this as beating that would be
+exactly the kind of overclaim the rest of this submission argues against.
 
 ## 7. Robustness to raw, untouched spec markup
 
