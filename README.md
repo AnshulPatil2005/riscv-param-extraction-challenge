@@ -344,6 +344,66 @@ takeaway: cost is not what limits this approach from scaling -- the
 grounding, schema-fidelity, and markup-robustness questions tested above
 are the actual bottleneck, not API spend.
 
+## 10. What UDB already encodes, measured (no model involved)
+
+Everything above tests an extractor against prose. These two analyses go the
+other way and measure the repository itself. Both are pure functions of a
+checkout -- no LLM, reproducible by anyone -- and both were run against a clean
+`riscv/riscv-unified-db@df65361c` snapshot.
+
+### CSR fields already name the parameters that govern them
+
+`scripts/csr_param_index.py` reads the IDL attached to every CSR field
+(`type()`, `sw_write()`, `reset_value()`) and classifies the field by what that
+IDL branches on:
+
+| Branches on | Fields | Share |
+|---|---:|---:|
+| a parameter | 848 | 88.1% |
+| `implemented?(ExtensionName::...)` | 11 | 1.1% |
+| a constant, i.e. nothing configurable | 104 | 10.8% |
+
+963 CSR fields carry IDL; 92 of the 227 parameters are named directly inside
+it. `mtvec.MODE` is the illustrative case: nothing in the manual's prose says
+it is governed by `MTVEC_ACCESS`, `MTVEC_MODES` and
+`MTVEC_ILLEGAL_WRITE_BEHAVIOR`, but its own `type()` and `sw_write()` name all
+three.
+
+The practical consequence is that a prose-only extractor is rediscovering,
+badly, a mapping the repository already states in 848 places. The 104 fixed
+fields are the false-positive class made concrete: a field there can still be
+labelled WARL in the manual, and it still yields no parameter, because nothing
+about it can differ between implementations. They are listed in
+[`analysis/fixed_fields.md`](analysis/fixed_fields.md).
+
+### 43 of 227 parameters are never read
+
+`scripts/orphan_params.py` asks the reverse question: which parameters does the
+ISA model actually consult?
+
+| | Count | Share |
+|---|---:|---:|
+| read by some file under `spec/std/isa/` | 184 | 81.1% |
+| **set in `cfgs/` but never read** | **39** | **17.2%** |
+| not referenced anywhere | 4 | 1.8% |
+
+The middle row is the interesting one. A configuration assigns those 39
+parameters a value and nothing consults it, so two configs differing only in
+that value describe the same machine. `MTVEC_BASE_ALIGNMENT_DIRECT` and
+`MTVEC_BASE_ALIGNMENT_VECTORED` are both in it. The last four
+(`HSTATEEN_CONTEXT_TYPE`, `HSTATEEN_CSRIND_TYPE`, `HSTATEEN_JVT_TYPE`,
+`SSTATEEN_JVT_TYPE`) appear nowhere outside their own definition files at all;
+`hstateen0.CONTEXT`, for instance, hardcodes `type: RW` and its `sw_write`
+consults another CSR rather than the parameter that exists for it.
+
+**This is not a defect list.** Much of the vector set looks defined ahead of the
+IDL meant to consume it, which is a reasonable way to work. The point is that
+"defined" and "has an effect" are different properties, the difference is
+mechanically checkable, and it is currently invisible. Under the criterion that
+a parameter must describe state that can differ between implementations, a
+parameter nothing reads does not yet meet it. Full lists in
+[`analysis/orphan_params.md`](analysis/orphan_params.md).
+
 ## How to run
 
 ```bash
@@ -363,6 +423,10 @@ python benchmark/scripts/score_recall.py --model claude-sonnet-5
 python robustness/scripts/check_grounding_modes.py --model claude-sonnet-5   # naive vs tag-aware grounding
 python negative_controls/scripts/check_negatives.py --model claude-sonnet-5  # hard negative controls
 
+# repository analyses (section 10); need a riscv-unified-db checkout, no model
+python scripts/csr_param_index.py --udb-root ../riscv-unified-db
+python scripts/orphan_params.py  --udb-root ../riscv-unified-db --revision main
+
 bash scripts/ci_check.sh   # everything above, in one gated pass -- same as CI
 
 # once ANTHROPIC_API_KEY / ZHIPU_API_KEY are set:
@@ -376,7 +440,9 @@ python scripts/extract.py --model glm-4.6 --provider zhipu --snippet snippets/cm
 prompts/            v1/v2/v3 prompt templates + prompts/rendered/ (paste-ready, schema+snippet filled in)
 snippets/            the two ISA Manual excerpts given in the challenge
 schema/              param_schema.json + its dependencies, vendored from riscv/riscv-unified-db
-scripts/             extract.py, validate.py, score.py, ci_check.sh (runs everything below in one gate)
+scripts/             extract.py, validate.py, score.py, ci_check.sh, plus the two
+                     repository analyses: csr_param_index.py and orphan_params.py
+analysis/            generated output of those two (JSON + markdown), pinned to a revision
 results/             extracted parameter YAML + evidence, per model, for the 2 challenge snippets
 benchmark/           n=13 recall benchmark against real merged parameters
 robustness/          raw-markup grounding test (naive vs tag-aware substring matching)
