@@ -173,3 +173,62 @@ produce none.**
 
 **Fix.** The few-shot example must be drawn from an excerpt that is not in the
 test set. Until it is, excerpt 1 measures nothing for v3.
+---
+
+## v4 -- same as v3, few-shot example swapped for one not in the test set
+
+`prompts/v4_clean_example.md`. The example becomes `ASID_WIDTH`, a real merged
+parameter from neither excerpt nor any of the 13 benchmark cases. Rule 4's
+naming examples were changed too (`CACHE_BLOCK_SIZE` -> `VLEN`), since naming
+the answer there was a second, smaller leak. `long_name: TODO` is kept in the
+example: it now reveals no answer, so it works as a pure copy tracer.
+
+### v4 x Opus 5
+
+**Excerpt 1 -- 1 parameter.** `CACHE_BLOCK_SIZE`, named without being shown it,
+with its own rationale for dropping the other two: capacity and organization are
+"not expressible as a well-defined architectural value in this excerpt".
+
+It also emitted `enum: [4, 8, 16, ... 4096]` -- deriving the power-of-two
+constraint from "naturally aligned power-of-two (or NAPOT)" in the prose. That
+is the same correction upstream PR #2189 made to the merged file, reached
+independently and with no repository access. It wrote its own `long_name`.
+
+**Excerpt 2 -- 0 parameters.** Correct.
+
+### v4 x Sonnet 5
+
+**Excerpt 1 -- 1 parameter.** `CACHE_BLOCK_SIZE`, gated on `Zicbom`, both
+derived rather than copied. Schema is `type: integer, minimum: 1` -- it missed
+the power-of-two constraint, the same error recorded in `CORRECTIONS.md` 2.
+
+`long_name: TODO` was copied from the ASID_WIDTH example. The tracer fired: this
+model does lift boilerplate from whatever example it is given. It did not lift
+an answer, because there was no longer one to lift.
+
+**Excerpt 2 -- 0 parameters.** Correct.
+
+### What v4 settles
+
+| Prompt | Cache: Opus 5 / Sonnet 5 | Example contains the answer? |
+|---|---|---|
+| v2 | 3 / 3 | no example at all |
+| v3 | 1 / 1 | **yes** |
+| v4 | **1 / 1** | no |
+
+The v2 -> v3 drop from 3 parameters to 1 **survives removal of the leak**. That
+reverses the earlier reading here, which held the drop was unmeasurable because
+it fell on the one excerpt whose answer the prompt contained. It was confounded;
+it was not spurious. What produces the drop is the schema constraint plus the
+explicit statement that zero is a valid answer, not the worked example.
+
+Two things the leak had been hiding:
+
+1. **Opus 5 derived the power-of-two enum from the prose.** Under v3 that was
+   impossible to see, because the example supplied `minimum: 1` and every model
+   echoed it. The under-specified schema in `CORRECTIONS.md` 2 was partly the
+   example's fault.
+2. **Sonnet 5 still copies boilerplate** (`long_name: TODO`) but composes the
+   substance. Under v3 those were indistinguishable.
+
+GLM-4.6 has not been run on v4. Until it is, the v4 row is two models, not three.
