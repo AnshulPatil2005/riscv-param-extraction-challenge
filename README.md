@@ -232,6 +232,15 @@ originally produced.
 
 ## 6. Recall benchmark (n=13, real merged parameters)
 
+> **Superseded headline.** The 100% figure below was produced inside a working
+> conversation. Re-run with every case in a fresh context, recall is **7/13
+> (54%)** and exact name agreement is **0/13**. See
+> [`benchmark/results/clean-rerun/RESULTS.md`](benchmark/results/clean-rerun/RESULTS.md).
+> Five of the six misses are vocabulary misses: the v3 rule-1 whitelist has five
+> phrases, and the manual also says "can", "if present" and "are allowed to".
+> The numbers below are kept as the record of the original run.
+
+
 The comparisons above are n=2. `benchmark/` is a larger, more real test:
 13 parameters that are already merged into `riscv-unified-db`, each
 re-paired with the *actual* ISA Manual prose it was derived from (found
