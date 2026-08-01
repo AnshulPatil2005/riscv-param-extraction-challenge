@@ -15,6 +15,7 @@ about the `results/` snippet runs, and the same objection applies here.
 |---|---|---|
 | Concept recall | **13 / 13 (100%)** | **7 / 13 (54%)** |
 | Exact name match | 1 / 13 | **0 / 13** |
+| Schema-type match, of hits | 9 / 13 | **3 / 7** |
 
 A 100% score on a 13-case benchmark should have been treated as a red flag
 rather than a result. The clean figure lands in the same band as the Spring
@@ -85,3 +86,31 @@ add "can", "if present", "is allowed to", "is permitted to" and re-run. That
 would very likely recover four of the six misses. Whether it reintroduces false
 positives on the negative controls is exactly the question the harness exists to
 answer, and it is not answered yet.
+
+## Schema fidelity of the seven hits
+
+| Case | Ground truth schema | Clean extraction | Match |
+|---|---|---|---|
+| NUM_PMP_ENTRIES | `integer`, enum `[0,16,64]` | `integer`, enum `[0,16,64]` | **exact** |
+| MISALIGNED_LDST_EXCEPTION_PRIORITY | `string`, enum `[low,high]` | `string`, enum `[higher,lower]` | type + values |
+| PMP_GRANULARITY | `integer`, 2..66 | `integer`, min 0 | type only |
+| LEGAL_VSTART | `string`, enum `[1_stride,2_stride,4_stride,custom]` | `boolean` | no |
+| RESERVED_VSET_X0X0_VLMAX_CHANGE | `string`, enum `[never,always,custom]` | `boolean` | no |
+| VECTOR_FF_SEG_EXCEPTION_PARTIAL_LOAD | `string`, enum `[no_subsegment_loaded,custom]` | `boolean` | no |
+| MTVEC_ACCESS | `string`, enum `[ro,rw]` | `array` of `integer`, minItems 1 | no |
+
+`NUM_PMP_ENTRIES` is reproduced exactly, enum members included, from "Implementations
+may implement zero, 16, or 64 PMP entries".
+
+Three of the four mismatches are one systematic difference: where the prose offers a
+binary choice the model writes a `boolean`, while UDB writes a `string` enum carrying a
+`custom` member so implementations can do something beyond the named options. That
+convention lives in the repository, not in the prose, and cannot be inferred from the
+sentence.
+
+The fourth is the interesting one. For `mtvec` the merged file has enum `[ro, rw]`;
+the clean run returned an **array of legal integer values**, reading "the set of values
+the register may hold can vary by implementation" as a WARL legal-value set. That is the
+shape UDB uses elsewhere for exactly this kind of field (compare `MTVEC_MODES`). The
+disagreement is about which aspect of the sentence to model, not about who read it
+correctly.
