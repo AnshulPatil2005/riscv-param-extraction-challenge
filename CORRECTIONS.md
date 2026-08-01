@@ -174,3 +174,26 @@ different answer.
 rewritten, as a record of what was originally produced; that is the same reason
 the earlier entries in this file exist.
 
+---
+
+## 8. Predicted 11/13 for v5; measured 10/13
+
+**Was:** the clean re-run predicted that widening rule 1's trigger list "would
+very likely recover four of the six" misses. It did. The first write-up of v5
+therefore reported **11/13**, re-running only the six misses and assuming the
+seven v4 hits would hold. The reasoning: v5's whitelist is a strict superset of
+v4's, so a case that triggered before must still trigger.
+
+**Is:** **10/13**. All thirteen were re-run. Six of the seven hits held;
+`RESERVED_VSET_X0X0_VLMAX_CHANGE` regressed, on a passage whose trigger --
+"Implementations **may** set vill" -- is whitelisted in both versions. The gate
+did not change for that case. The model's judgement did, declining it as
+"transient, per-execution behavior ... not a design-time parameter".
+
+**Why it matters:** the superset argument treats a prompt as a filter applied to
+text. It is not. A prompt is context that shapes judgement everywhere, including
+on cases whose rule was untouched, so a change that is lexically monotonic can be
+behaviourally non-monotonic. This is the same class of mistake as 7 -- assuming a
+measurement rather than making it -- caught the same way, by re-running instead
+of reasoning about what the re-run would show.
+

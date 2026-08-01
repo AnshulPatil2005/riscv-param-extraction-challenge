@@ -140,7 +140,7 @@ fixed encoding convention every conformant implementation follows
 identically. This is the negative control: a prompt that over-triggers on
 "sounds technical" text would incorrectly extract 2-3 parameters here.
 
-## 4. Prompt x model ablation (3 prompts x 3 models)
+## 4. Prompt x model ablation (5 prompt versions)
 
 Three prompt versions against three models, on both snippets. Every Claude cell
 ran in a **fresh context with no conversation history and no tool access**
@@ -215,7 +215,61 @@ same model, same prompt, different context, different answer. The grid
 supersedes them as the measurement; they are kept as records of what was
 originally produced.
 
-## 5. Status -- open items
+## 5. v5 -- widening the trigger list, and a result nobody would predict
+
+The clean re-run (section 7) attributed five of six benchmark misses to rule 1's
+whitelist being too narrow. `prompts/v5_widened_triggers.md` widens it from five
+phrases to thirteen, adding `can`, `if present`, `is/are allowed to`,
+`is/are permitted to`. Nothing else changes. Full record:
+[`benchmark/results/v5-widened/RESULTS.md`](benchmark/results/v5-widened/RESULTS.md).
+
+**Precision survived a direct threat.** The CSR negative control literally
+contains "the lowest privilege level that **can** access the CSR", so
+whitelisting `can` put it in danger. Both models saw it and returned zero anyway.
+Opus 5:
+
+> "can" describes architecturally fixed accessibility semantics rather than an
+> implementation choice, so it does not justify a parameter under Rule 1.
+
+The trigger list is a **gate, not the decision**. Widening the gate did not widen
+what got through.
+
+**Recall went up, but not by as much as predicted, because one case regressed.**
+
+| | v4 | v5 |
+|---|---|---|
+| Concept recall | 7 / 13 (54%) | **10 / 13 (77%)** |
+| False positives, negative control | 0 | **0** |
+
+Four recovered (`MARCHID` via "can", the atomicity granule via "if present",
+whole-register via "are allowed to", LR/SC via "can be generated"). One was lost.
+
+**The regression is the finding.** `RESERVED_VSET_X0X0_VLMAX_CHANGE` hit under v4
+and misses under v5 -- on a passage whose trigger, "Implementations **may** set
+vill", is whitelisted in *both* versions. The gate never changed for that case.
+The judgement did:
+
+> this "may" clause describes transient, per-execution behavior of the `vill`
+> bit ... not a fixed architectural configuration knob ... discretionary runtime
+> behavior on an already-reserved code path, not a design-time parameter.
+
+The natural assumption -- that a superset whitelist can only *add* extractions --
+is **false**. A prompt is not a filter applied to text; it is context that shapes
+judgement everywhere, including on cases whose rule was untouched. Lengthening
+rule 1 made the model stricter overall about what counts as a parameter.
+
+Had the seven v4 hits been assumed rather than re-run, this repo would report
+11/13. All 13 cases and both controls were re-run in fresh contexts. The number
+is 10/13.
+
+**What remains is one category.** The three surviving misses -- the `time` CSR
+("can convert" as implementation technique), `vfredusum` (per-operator-node
+freedom), `vset` (per-execution behaviour) -- each grant *behavioural* latitude,
+and the model declines to record behaviour as a configuration value. UDB
+disagrees in all three: all three are merged parameters. That disagreement is the
+substance of what a parameter is, and no keyword rule reaches it.
+
+## 6. Status -- open items
 
 - **GLM version string:** the results are filed under `results/glm-4.6/`,
   but the exact version reported by the playground UI should be confirmed
@@ -230,11 +284,12 @@ originally produced.
   automatically once keys are configured; the current results were produced
   by running the same prompt through each model directly.
 
-## 6. Recall benchmark (n=13, real merged parameters)
+## 7. Recall benchmark (n=13, real merged parameters)
 
 > **Superseded headline.** The 100% figure below was produced inside a working
 > conversation. Re-run with every case in a fresh context, recall is **7/13
-> (54%)** and exact name agreement is **0/13**. See
+> (54%)** and exact name agreement is **0/13**. Under v5 (section 5) it is
+> **10/13**. See
 > [`benchmark/results/clean-rerun/RESULTS.md`](benchmark/results/clean-rerun/RESULTS.md).
 > Five of the six misses are vocabulary misses: the v3 rule-1 whitelist has five
 > phrases, and the manual also says "can", "if present" and "are allowed to".
@@ -289,7 +344,7 @@ classification on v2): that was measured across the whole manual against a
 are not measuring the same thing, and treating this as beating that would be
 exactly the kind of overclaim the rest of this submission argues against.
 
-## 7. Robustness to raw, untouched spec markup
+## 8. Robustness to raw, untouched spec markup
 
 Every case above uses hand-cleaned prose -- real text, but with AsciiDoc
 markup (`[#norm:...]#...#` tags, `_italics_`, inline `csr:x[]` macros)
@@ -329,7 +384,7 @@ tag boundaries landed on clean word breaks. Not every markup placement
 breaks naive matching; this is why the test uses three real, differently-
 structured passages instead of one.)
 
-## 8. Hard negative controls
+## 9. Hard negative controls
 
 The CSR snippet (§3) is a clean negative control -- no optionality
 language at all. `negative_controls/` is a harder test: two more real
@@ -355,7 +410,7 @@ Both correctly return zero parameters -- proof the extraction is keying on
 sentence contain the word 'should'." A prompt that pattern-matches on
 keyword presence alone would have over-triggered on both.
 
-## 9. Scale and cost
+## 10. Scale and cost
 
 All of the above runs on curated snippets. [`docs/scale_and_cost.md`](docs/scale_and_cost.md)
 measures the real ISA manual (147 files, 284,854 words, 845 natural
@@ -367,7 +422,7 @@ takeaway: cost is not what limits this approach from scaling -- the
 grounding, schema-fidelity, and markup-robustness questions tested above
 are the actual bottleneck, not API spend.
 
-## 10. What UDB already encodes, measured (no model involved)
+## 11. What UDB already encodes, measured (no model involved)
 
 Everything above tests an extractor against prose. These two analyses go the
 other way and measure the repository itself. Both are pure functions of a
@@ -446,7 +501,7 @@ python benchmark/scripts/score_recall.py --model claude-sonnet-5
 python robustness/scripts/check_grounding_modes.py --model claude-sonnet-5   # naive vs tag-aware grounding
 python negative_controls/scripts/check_negatives.py --model claude-sonnet-5  # hard negative controls
 
-# repository analyses (section 10); need a riscv-unified-db checkout, no model
+# repository analyses (section 11); need a riscv-unified-db checkout, no model
 python scripts/csr_param_index.py --udb-root ../riscv-unified-db
 python scripts/orphan_params.py  --udb-root ../riscv-unified-db --revision main
 
