@@ -5,7 +5,7 @@ thirteen, adding "can", "if present", "is allowed to"/"are allowed to" and
 "is permitted to"/"are permitted to". Nothing else changed.
 
 The clean re-run (`../clean-rerun/`) attributed five of six benchmark misses to
-that list being too narrow, and predicted widening would recover four. It also
+that list being too narrow, and predicted widening would recover four. It did -- and cost one. It also
 posed the risk: the CSR negative control contains "the lowest privilege level
 that **can** access the CSR", so "can" puts that control directly in danger.
 
@@ -37,9 +37,45 @@ what got through.
 | TIME_CSR_IMPLEMENTED | miss | miss | -- |
 | VFREDUSUM_INACTIVE_NODE_ELEMENT_BEHAVIOR | miss | miss | -- |
 
-**Recall 7/13 -> 11/13 (85%), with false positives unchanged at zero.**
+Four recovered. But the seven v4 hits were also re-run, and one of them regressed.
 
-## The two that remain are a different kind of miss
+## The regression: a superset prompt is not monotonic
+
+All seven v4 hits were re-run under v5. Six held. One did not:
+
+| Case | v4 | v5 |
+|---|---|---|
+| RESERVED_VSET_X0X0_VLMAX_CHANGE | hit `VSETVL_RESERVED_SETS_VILL` | **miss** |
+
+Its trigger phrase is "Implementations **may** set vill in either case" -- "may"
+was whitelisted in v4 and is still whitelisted in v5. The gate did not change for
+this case. The model's judgement did:
+
+> this "may" clause describes transient, per-execution behavior of the `vill`
+> bit ... not a fixed architectural configuration knob analogous to `VLEN`,
+> `PMLEN`, or `ASID_WIDTH` ... it's discretionary runtime behavior on an
+> already-reserved code path, not a design-time parameter.
+
+**This is the result worth keeping.** The reasonable assumption -- that widening a
+whitelist can only add extractions, because the new list is a strict superset --
+is false. A prompt is not a filter applied to text; it is context that shapes
+judgement everywhere, including on cases whose trigger never changed. Lengthening
+rule 1 appears to have made the model stricter about what counts as a parameter,
+which cost a case that a purely lexical model of the prompt says could not move.
+
+Had the seven hits been assumed rather than re-run, this submission would have
+reported 11/13. The real number is 10/13.
+
+## Corrected headline
+
+| | v4 | v5 |
+|---|---|---|
+| Concept recall | 7 / 13 (54%) | **10 / 13 (77%)** |
+| False positives, negative control | 0 | **0** |
+
+Four recovered, one lost, net +3.
+
+## Three misses remain, and they are one category
 
 Neither survivor is a vocabulary failure now. Both accepted the trigger and
 declined on judgement.
@@ -55,14 +91,21 @@ rejected it:
 contains "may" twice, but the freedom is exercised per operator node rather than
 fixed once per implementation, so there is no single value to record.
 
+`RESERVED_VSET_X0X0_VLMAX_CHANGE` -- the regression above, declined as
+per-execution behaviour rather than a design-time value.
+
+All three are the same objection in different clothes: the excerpt grants
+*behavioural* freedom, and the model declines to record behaviour as a
+configuration value. UDB disagrees in all three cases, since all three are merged
+parameters. That disagreement is the substance of what a parameter is, and no
+keyword rule reaches it.
+
 So widening the list moved the failure mode from **lexical to semantic**. What is
 left is the question of what counts as a parameter at all -- the same question
 `CORRECTIONS.md` 5 answers for cache capacity, and the one that cannot be settled
 by any keyword rule.
 
-## Caveat
+## What was run
 
-Only the six v4 misses were re-run under v5; the seven v4 hits were not. v5's
-trigger list is a strict superset of v4's, so a case that fired before still
-fires, but model behaviour could shift for other reasons. 11/13 therefore
-assumes those seven hold. The negative control was re-run in full.
+All 13 benchmark cases and both negative-control excerpts were re-run under v5,
+every one in a fresh context with no tool access. Nothing here is assumed.
