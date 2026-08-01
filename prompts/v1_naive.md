@@ -12,12 +12,17 @@ name, description, type, and constraints.
 {snippet}
 ---
 
-## Observed failure mode
+## Measured failure mode
 
-Run against the CSR address-mapping snippet (`csr_address_mapping.txt`),
-this prompt extracts 2-3 "parameters" out of the CSR encoding convention
-table (e.g. treats "the top two bits indicate read/write vs read-only" as
-if it were an implementation choice). It isn't -- it's a fixed encoding
-rule. The prompt has no anchor for what actually signals optionality, so
-it pattern-matches on "this text describes a technical rule" rather than
-"this text describes an implementation choice."
+Run against the CSR snippet (`csr_address_mapping.txt`) in a fresh context,
+this prompt returns false positives in **every model tested** -- 4 from Opus 5,
+3 from Sonnet 5, 1 from GLM-4.6. It has no anchor for what signals optionality,
+so it pattern-matches "this text describes a technical rule" onto "this text
+describes an implementation choice". Sonnet 5's output is self-refuting: it
+emits `csr_address_space_width` as a parameter and records its constraint as
+`Fixed at 12 bits`.
+
+It also states no naming convention, and both Sonnet 5 and GLM-4.6 returned
+free-form lowercase names that would fail `param_schema.json`.
+
+Counts and quotes: [`results/grid/RAW_OUTPUTS.md`](../results/grid/RAW_OUTPUTS.md).

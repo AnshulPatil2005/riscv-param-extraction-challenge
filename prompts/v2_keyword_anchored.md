@@ -31,9 +31,18 @@ enforces this automatically.
 
 ## Remaining gap
 
-This version correctly abstains on the CSR snippet and correctly finds
-both parameters in the cache-block snippet, but the field names/types are
-free-form -- there's no guarantee the output actually matches the shape
-`riscv-unified-db`'s real `param_schema.json` expects (e.g. it might name
-a field `values` instead of putting an `enum` under `schema.items`). v3
-fixes this by constraining the model to the live schema.
+Measured across three models in fresh contexts, this version **eliminates the
+false positives** v1 produces on the CSR snippet: 0 parameters from all three,
+with correct reasoning ("By convention" describes a fixed encoding rather than
+granting implementation latitude). That is the real, attributable gain of the
+whole prompt series.
+
+On the cache snippet all three models return 3 parameters here. Two of those
+three are wrong -- see [`CORRECTIONS.md`](../CORRECTIONS.md) 5 -- and no
+keyword rule can fix that, because the trigger phrase genuinely governs all
+three subjects in the sentence. Deciding it needs the repository, not the
+sentence.
+
+The field names and types are also free-form, with no guarantee they match the
+shape `param_schema.json` expects. v3 addresses the second problem by
+constraining the model to the live schema; it does not address the first.

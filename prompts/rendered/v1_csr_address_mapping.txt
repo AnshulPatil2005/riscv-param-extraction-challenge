@@ -1,0 +1,22 @@
+Extract the architectural parameters from the following excerpt of the
+RISC-V ISA Manual. An architectural parameter is any aspect of the
+architecture that an implementation is allowed to choose rather than a
+behavior the spec mandates fixed.
+
+Return your answer as YAML, one document per parameter, with fields for
+name, description, type, and constraints.
+
+---
+Source: RISC-V Privileged ISA Manual, Section 2.1 (CSR Address Mapping Conventions)
+
+"Conventional" R/W accessibility of CSRs according to address mapping
+conventions.
+
+The standard RISC-V ISA sets aside a 12-bit encoding space (csr[11:0]) for up
+to 4,096 CSRs. By convention, the upper 4 bits of the CSR address
+(csr[11:8]) are used to encode the read and write accessibility of the CSRs
+according to privilege level as shown in Table 1. The top two bits
+(csr[11:10]) indicate whether the register is read/write (00, 01, or 10) or
+read-only (11). The next two bits (csr[9:8]) encode the lowest privilege
+level that can access the CSR.
+---

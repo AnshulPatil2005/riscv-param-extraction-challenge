@@ -1,0 +1,30 @@
+Extract architectural parameters from the excerpt below. Only extract
+something as a parameter if the excerpt contains explicit optionality
+language: "may", "might", "should", "optional"/"optionally", or
+"implementation-defined"/"implementation-specific". Do not extract
+anything whose optionality you have to infer -- it must be stated.
+
+For each parameter found, output:
+- `name`: a SCREAMING_SNAKE_CASE identifier
+- `quote`: the exact sentence or clause (verbatim, copy-pasted, not
+  paraphrased) from the excerpt that establishes this is a parameter
+- `description`: what the parameter controls
+- `type`: a plausible JSON-Schema-ish type (boolean, integer, string, enum)
+- `constraints`: any bounds or enumerated legal values mentioned in the text
+
+If the excerpt contains no optionality language, say so explicitly and
+return no parameters. Do not force an answer.
+
+---
+Source: RISC-V Privileged ISA Manual, Section 19.3.1 (Cache Management Operations)
+
+Caches organize copies of data into cache blocks, each of which represents a
+contiguous, naturally aligned power-of-two (or NAPOT) range of memory
+locations. A cache block is identified by any of the physical addresses
+corresponding to the underlying memory locations. The capacity and
+organization of a cache and the size of a cache block are both
+implementation-specific, and the execution environment provides software a
+means to discover information about the caches and cache blocks in a system.
+In the initial set of CMO extensions, the size of a cache block shall be
+uniform throughout the system.
+---

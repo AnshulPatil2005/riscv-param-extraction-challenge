@@ -140,66 +140,80 @@ fixed encoding convention every conformant implementation follows
 identically. This is the negative control: a prompt that over-triggers on
 "sounds technical" text would incorrectly extract 2-3 parameters here.
 
-## 4. Model comparison: Sonnet 5 vs Opus 4.8 vs GLM-4.6
+## 4. Prompt x model ablation (3 prompts x 3 models)
 
-All three models were run on the identical v3 prompt (Claude models via
-this environment; GLM-4.6 via a hosted playground at default settings).
-Results in `results/claude-sonnet-5/`, `results/claude-opus-4-8/`, and
-`results/glm-4.6/`.
+Three prompt versions against three models, on both snippets. Every Claude cell
+ran in a **fresh context with no conversation history and no tool access**
+(`tool_uses: 0` on all six); GLM-4.6 cells were run in fresh playground chats.
+The snippet text is byte-identical across v1/v2/v3, so instruction wording is
+the only variable within a column. Raw outputs:
+[`results/grid/RAW_OUTPUTS.md`](results/grid/RAW_OUTPUTS.md).
 
-| Dimension | Sonnet 5 | Opus 4.8 | GLM-4.6 |
-|---|---|---|---|
-| Groundedness (every param has a verbatim source quote) | pass | pass | pass |
-| Recall on cache-block sentence | 3 candidates | 2 emitted + 1 explicitly declined | **1 only** (missed `CACHE_CAPACITY`) |
-| Precision on CSR negative control | 0 (correct) | 0 (correct) | 0 (correct) |
-| Schema conformity (passes `validate.py` first try) | pass | pass | pass |
+Parameters emitted, in the order **Opus 5 / Sonnet 5 / GLM-4.6**:
 
-No model hallucinated, all three correctly returned **zero** parameters on
-the CSR negative control, and every emitted parameter passed schema +
-grounding validation. The models split cleanly into two behaviors:
+| Prompt | Cache-block snippet | CSR snippet (negative control) |
+|---|---|---|
+| v1 naive | 4 / 3 / 3 | **4 / 3 / 1 -- all false positives** |
+| v2 keyword-anchored | 3 / 3 / 3 | 0 / 0 / 0 -- all correct |
+| v3 schema-constrained | 1 / 1 / 1 | 0 / 0 / 0 -- all correct |
 
-**The two frontier models (Sonnet, Opus) differ only on a judgment call.**
-The source clause makes cache "organization" implementation-specific, so
-the trigger is present. **Sonnet 5 emitted `CACHE_ORGANIZATION`** as a
-parameter with an opaque `type: string` schema, flagged as needing SIG
-scoping. **Opus 4.8 declined to emit it**
-(see [`CACHE_ORGANIZATION.DECLINED.txt`](results/claude-opus-4-8/CACHE_ORGANIZATION.DECLINED.txt)),
-arguing "organization" has no definable value space and an opaque-string
-parameter validates nothing -- a schema-shaped false positive. Opus also
-flagged that gating `CACHE_CAPACITY` on the CMO extensions is itself a
-modeling question (any cache has a capacity regardless of CMO), which
-Sonnet did not raise. Both extracted the two clean numeric parameters.
+### The negative control is the clean result
 
-**The open-weight model (GLM-4.6) under-extracts.** GLM returned only
-`CACHE_BLOCK_SIZE` -- and its output is near-identical to the few-shot
-example it was shown (same `description` string, same `long_name: TODO`).
-It **missed `CACHE_CAPACITY` entirely**, even though the evidence quote it
-produced itself contains "The capacity ... of a cache ... implementation-
-specific." This is textbook few-shot anchoring: the model reliably
-reproduces the parameter it was shown as an example but fails to
-generalize the extraction rule to the *novel* parameter sitting in the
-same sentence. Crucially, everything GLM *did* emit was correct --
-grounded, schema-valid, and it aced the negative control. Its failure mode
-is not hallucination (low precision) but **omission (low recall)**.
+v1 fabricates parameters out of a fixed encoding table in **every** model:
 
-**Why this matters for the project.** The Spring 2026 pipeline's documented
-weakness was recall, not precision. Its v2 run reported 69.7% raw recall and
-88.4% classification accuracy (v1: 60.0% / 67.9%), with per-class recall
-much more uneven than the headline: `NORM_DIRECT` 83%, `NORM_CSR_RW` 63%,
-`NORM_CSR_WARL` 50%. This n=2 probe reproduces that shape on the open-weight
-model: safe but incomplete. Two concrete design implications follow:
+- **Opus 5** reasoned that because `00`, `01` and `10` all denote read/write,
+  "the choice among them is an additional degree of freedom".
+- **Sonnet 5** emitted `csr_address_space_width`, then recorded its constraint
+  as `Fixed at 12 bits`.
+- **GLM-4.6** emitted `implemented_csr_count`, justified by "the spec ... does
+  not mandate that all be implemented" -- a sentence not present in the snippet.
 
-1. **Model choice is a recall decision here, not a precision one.** All
-   three models are trustworthy when they *do* extract; they differ in how
-   much they *miss*. For a pipeline whose stated goal is quality/robustness,
-   that argues for a frontier model on the extraction pass rather than
-   trading recall for the open model's lower cost.
-2. **Disagreement is a routing signal.** Where Sonnet and Opus split
-   (`CACHE_ORGANIZATION`), the right pipeline behavior is to surface it for
-   human/SIG review, not to auto-merge or average. The repo's own review
-   culture backs the conservative call -- PR #2009 required splitting an
-   over-broad parameter; issue #69 / PR #1968 show disputed modeling
-   deferred to the Parameter SIG rather than merged speculatively.
+Requiring *stated* optionality plus a verbatim quote removes all of it: v2 and
+v3 return zero here in every model. **This is the one gain in the grid that is
+real and attributable.**
+
+### The cache column cannot measure v3
+
+Those counts read as steady improvement, 4 -> 3 -> 1. They are not. **v3 is the
+only version carrying a few-shot example, and that example is
+`CACHE_BLOCK_SIZE` -- the answer to this snippet.**
+
+| Model | v3 output, cache snippet | Copied from the example? |
+|---|---|---|
+| GLM-4.6, run 1 | 1 param | **byte-identical**, including `long_name: TODO` |
+| GLM-4.6, run 2 | 1 param | `description` prefix verbatim, then extended |
+| Sonnet 5 | 1 param | `long_name` + `description` verbatim |
+| Opus 5 | 1 param | no -- own wording, own rationale |
+| Opus 4.8 | 2 params + 1 declined | no -- own wording, own rationale |
+
+So the v2 -> v3 drop **cannot be credited to the schema constraint or to the
+explicit permission to return zero**; it is confounded with answer leakage.
+Only the two Opus runs demonstrably reasoned. Opus 5, with no repository
+access, called cache capacity and organization "software-discoverable
+microarchitectural properties with no architecturally observable behavior" --
+independently reproducing the argument in [`CORRECTIONS.md`](CORRECTIONS.md) 5.
+
+**Fix:** the few-shot example must be drawn from a passage that is not in the
+test set.
+
+### This corrects an earlier reading
+
+An earlier version of this section concluded that GLM-4.6 "under-extracts",
+"missed `CACHE_CAPACITY` entirely", and that model choice here is "a recall
+decision" favouring a frontier model. The grid disproves that. Under v1 and v2,
+GLM returns **3 parameters** on the cache snippet -- exactly like Sonnet 5 and
+Opus 5. It is not a low-recall model; it was anchored by the example. And
+`CACHE_CAPACITY` is not a parameter to have missed: see
+[`CORRECTIONS.md`](CORRECTIONS.md) 5.
+
+### Reproducibility caveat
+
+The runs under `results/claude-sonnet-5/` and siblings were produced inside a
+working conversation rather than a fresh one. Re-run cleanly, **Sonnet 5 on v3
+returns 1 parameter for the cache snippet where the recorded run returned 3** --
+same model, same prompt, different context, different answer. The grid
+supersedes them as the measurement; they are kept as records of what was
+originally produced.
 
 ## 5. Status -- open items
 
